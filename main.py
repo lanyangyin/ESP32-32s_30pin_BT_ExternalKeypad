@@ -3,9 +3,11 @@ from machine import Pin, I2C, PWM
 from BTkeyboard.Buzzer import Buzzer
 from BTkeyboard.LED_ssd1306_screen import Run as oLED_run
 from BTkeyboard.bluetooth import Device as BluetoothDevice
+from BTkeyboard.bt_hid_output import bt_show
 from BTkeyboard.keyboard import Key
 from BTkeyboard.keys_config import KeyCode
 from BTkeyboard.knob import Knob
+from BTkeyboard.mode_key_set import mode_texts
 from lib import ufont
 from lib.hid_services import Keyboard
 from lib.ssd1306 import SSD1306_I2C
@@ -13,6 +15,41 @@ from lib.ssd1306 import SSD1306_I2C
 # 指示灯
 big_led = Pin(33, Pin.OUT)
 big_led.value(0)
+
+# 创建蓝牙对象
+bt = BluetoothDevice("ESP32_Keyboard")
+bt.active(False)
+time.sleep(1)  # 等待蓝牙初始化
+bt.active(True)
+# 等待蓝牙连接
+btgs = bt.keyboard.get_state()
+while btgs is not Keyboard.DEVICE_CONNECTED:
+    # 如果设备空闲，则开始广播或直到设备连接
+    if btgs is Keyboard.DEVICE_IDLE:
+        bt.keyboard.start_advertising()  # 开始广播
+        bt.wait_for_confirmation(60)  # 等待广播或连接
+        if btgs is Keyboard.DEVICE_ADVERTISING:  # 如果仍在广播
+            bt.keyboard.stop_advertising()  # 则停止广播
+    btgs = bt.keyboard.get_state()
+time.sleep(5)  # 设备未连接时，使用较长的睡眠时间以节省电量
+
+
+# 初始化ssd1306 oLED屏幕
+i2c = I2C(1, sda=Pin(21), scl=Pin(22), freq=400000)
+ssd = SSD1306_I2C(128, 64, i2c)
+uFont = ufont.BMFont("fonts/unifont-14-12888-16.v3.bmf")
+ssd_object = oLED_run(ssd=ssd, uFont=uFont)
+# 初始化蜂鸣器
+buzzer = Buzzer(PWM(Pin(32, Pin.OUT), freq=900, duty=0))
+# 初始化旋钮
+knobs = Knob()
+knob_click = knobs.Click(io_pins={0: Pin(25, Pin.IN, Pin.PULL_DOWN), 1: Pin(26, Pin.IN, Pin.PULL_DOWN)})
+L_io_pins = {0: Pin(14, Pin.IN, Pin.PULL_DOWN), 1: Pin(27, Pin.IN, Pin.PULL_DOWN)}
+R_io_pins = {0: Pin(13, Pin.IN, Pin.PULL_DOWN), 1: Pin(12, Pin.IN, Pin.PULL_DOWN)}
+key = Key([Pin(15, Pin.OUT), Pin(2, Pin.OUT), Pin(4, Pin.OUT), Pin(16, Pin.OUT), Pin(17, Pin.OUT)],
+          [Pin(5, Pin.IN, Pin.PULL_UP), Pin(18, Pin.IN, Pin.PULL_UP), Pin(19, Pin.IN, Pin.PULL_UP),
+           Pin(23, Pin.IN, Pin.PULL_UP)])
+
 
 # 全局变量
 knob_rotate_left_status = 0
@@ -37,68 +74,6 @@ rp = {0: (0, 0), 1: (0, 0), 2: (0, 0), 3: (0, 0)}
 lp = {0: (0, 0), 1: (0, 0), 2: (0, 0), 3: (0, 0)}
 clockwise = {0: (0, 0), 1: (0, 1), 2: (1, 1), 3: (1, 0)}
 anticlockwise = {0: (0, 0), 1: (1, 0), 2: (1, 1), 3: (0, 1)}
-mode_texts = {
-    0: {"display": ("原始", "按钮图标_64"),
-        "key": [[keycode.KC_BSPACE, keycode.KC_KP_SLASH, keycode.KC_KP_ASTERISK, keycode.KC_KP_MINUS],
-                [keycode.KC_KP_7, keycode.KC_KP_8, keycode.KC_KP_9, keycode.KC_KP_PLUS],
-                [keycode.KC_KP_4, keycode.KC_KP_5, keycode.KC_KP_6, keycode.KC_KP_ENTER],
-                [keycode.KC_KP_1, keycode.KC_KP_2, keycode.KC_KP_3, keycode.KC_KP_DOT],
-                [0x00, 0x00, 0x00, keycode.KC_KP_0]]},
-    1: {"display": ("代码", "按钮图标_64"),
-        "key": [["替换", "注释", "进格", "退格"],
-                ["查找", "优化代码", "优化import", "恢复"],
-                ["全选", "跳转助记标签", "连接行", "撤回"],
-                ["复制", "粘贴", "剪切", "另存为"],
-                [0x00, 0x00, 0x00, "保存"]]},
-    2: {"display": ("常规", "按钮图标_64"),
-        "key": [["创建文件夹", "删除文件", "切换上一个桌面", "切换下一个桌面"],
-                ["返回桌面", "最小化", "展示窗口", "恢复"],
-                ["全选", "替换", "打印", "撤回"],
-                ["复制", "粘贴", "剪切", "另存为"],
-                [0x00, 0x00, 0x00, "保存"]]},
-    3: {"display": ("P S", "按钮图标_64"),
-        "key": [[0x00, 0x00, 0x00, 0x00],
-                [0x00, 0x00, 0x00, 0x00],
-                [0x00, 0x00, 0x00, 0x00],
-                [0x00, 0x00, 0x00, 0x00],
-                [0x00, 0x00, 0x00, 0x00]]},
-    4: {"display": ("OBS", "按钮图标_64"),
-        "key": [[0x00, 0x00, 0x00, 0x00],
-                [0x00, 0x00, 0x00, 0x00],
-                [0x00, 0x00, 0x00, 0x00],
-                [0x00, 0x00, 0x00, 0x00],
-                [0x00, 0x00, 0x00, 0x00]]},
-    5: {"display": ("L2D", "按钮图标_64"),
-        "key": [[0x00, 0x00, 0x00, 0x00],
-                [0x00, 0x00, 0x00, 0x00],
-                [0x00, 0x00, 0x00, 0x00],
-                [0x00, 0x00, 0x00, 0x00],
-                [0x00, 0x00, 0x00, 0x00]]},
-    6: {"display": ("音C", "音乐图标_64"),
-        "key": [[1, 2, 3, 4],
-                [5, 6, 7, 0],
-                [11, 12, 13, 0],
-                [14, 15, 16, 17],
-                [0, 0, 0, 0]]}
-}
-
-# 初始化ssd1306 oLED屏幕
-i2c = I2C(0, sda=Pin(21), scl=Pin(22), freq=400000)
-ssd = SSD1306_I2C(128, 64, i2c)
-uFont = ufont.BMFont("fonts/unifont-14-12888-16.v3.bmf")
-ssd_object = oLED_run(ssd=ssd, uFont=uFont)
-# 初始化蜂鸣器
-buzzer = Buzzer(PWM(Pin(32, Pin.OUT), freq=900, duty=0))
-# 创建蓝牙对象
-bt = BluetoothDevice("ESP32_Keyboard")
-# 初始化旋钮
-knobs = Knob()
-knob_click = knobs.Click(io_pins={0: Pin(25, Pin.IN, Pin.PULL_DOWN), 1: Pin(26, Pin.IN, Pin.PULL_DOWN)})
-L_io_pins = {0: Pin(14, Pin.IN, Pin.PULL_DOWN), 1: Pin(27, Pin.IN, Pin.PULL_DOWN)}
-R_io_pins = {0: Pin(13, Pin.IN, Pin.PULL_DOWN), 1: Pin(12, Pin.IN, Pin.PULL_DOWN)}
-key = Key([Pin(15, Pin.OUT), Pin(2, Pin.OUT), Pin(4, Pin.OUT), Pin(16, Pin.OUT), Pin(17, Pin.OUT)],
-          [Pin(5, Pin.IN, Pin.PULL_UP), Pin(18, Pin.IN, Pin.PULL_UP), Pin(19, Pin.IN, Pin.PULL_UP),
-           Pin(23, Pin.IN, Pin.PULL_UP)])
 
 
 def display_mode():
@@ -141,214 +116,6 @@ def key_show_clear():
     bt.keyboard.set_modifiers()
     bt.keyboard.set_keys()
     bt.keyboard.notify_hid_report()
-
-
-def bt_show(once_click):
-    """
-    显示蓝牙键盘，一次点击按键
-    :param once_click: 16进制键值或组合键名称
-    :return:
-    """
-    if once_click == "新建文件夹":
-        print("创建文件夹")
-        if os_name:
-            bt.keyboard.set_modifiers(left_control=True, left_shift=True)
-        else:
-            bt.keyboard.set_modifiers(left_gui=True, left_shift=True)
-        bt.keyboard.set_keys(keycode.KC_N)
-    elif once_click == "删除文件":
-        print("删除文件")
-        if os_name:
-            bt.keyboard.set_keys(keycode.KC_DELETE)
-        else:
-            bt.keyboard.set_modifiers(left_gui=True)
-            bt.keyboard.set_keys(keycode.KC_BSPACE)
-    elif once_click == "复制":
-        print("复制")
-        if os_name:
-            bt.keyboard.set_modifiers(left_control=True)
-        else:
-            bt.keyboard.set_modifiers(left_gui=True)
-        bt.keyboard.set_keys(keycode.KC_C)
-    elif once_click == "剪切":
-        print("剪切")
-        if os_name:
-            bt.keyboard.set_modifiers(left_control=True)
-        else:
-            bt.keyboard.set_modifiers(left_gui=True)
-        bt.keyboard.set_keys(keycode.KC_X)
-    elif once_click == "粘贴":
-        print("粘贴")
-        if os_name:
-            bt.keyboard.set_modifiers(left_control=True)
-        else:
-            bt.keyboard.set_modifiers(left_gui=True)
-        bt.keyboard.set_keys(keycode.KC_V)
-    elif once_click == "全选":
-        print("全选")
-        if os_name:
-            bt.keyboard.set_modifiers(left_control=True)
-        else:
-            bt.keyboard.set_modifiers(left_gui=True)
-        bt.keyboard.set_keys(keycode.KC_A)
-    elif once_click == "保存":
-        print("保存")
-        if os_name:
-            bt.keyboard.set_modifiers(left_control=True)
-        else:
-            bt.keyboard.set_modifiers(left_gui=True)
-        bt.keyboard.set_keys(keycode.KC_S)
-    elif once_click == "另存为":
-        print("另存为")
-        if os_name:
-            bt.keyboard.set_modifiers(left_control=True, left_shift=True)
-        else:
-            bt.keyboard.set_modifiers(left_gui=True, left_shift=True)
-        bt.keyboard.set_keys(keycode.KC_S)
-    elif once_click == "查找":
-        print("查找")
-        if os_name:
-            bt.keyboard.set_modifiers(left_control=True)
-        else:
-            bt.keyboard.set_modifiers(left_gui=True)
-        bt.keyboard.set_keys(keycode.KC_F)
-    elif once_click == "替换":
-        print("替换")
-        if os_name:
-            bt.keyboard.set_modifiers(left_control=True)
-        else:
-            bt.keyboard.set_modifiers(left_gui=True)
-        bt.keyboard.set_keys(keycode.KC_R)
-    elif once_click == "打印":
-        print("打印")
-        if os_name:
-            bt.keyboard.set_modifiers(left_control=True)
-        else:
-            bt.keyboard.set_modifiers(left_gui=True)
-        bt.keyboard.set_keys(keycode.KC_P)
-    elif once_click == "返回桌面":
-        print("返回桌面")
-        if os_name:
-            bt.keyboard.set_modifiers(left_control=True)
-            bt.keyboard.set_keys(keycode.KC_D)
-        else:
-            bt.keyboard.set_keys(keycode.KC_F11)
-    elif once_click == "切换下一个桌面":
-        print("切换下一个桌面")
-        if os_name:
-            bt.keyboard.set_modifiers(left_control=True, left_gui=True)
-        else:
-            bt.keyboard.set_modifiers(left_control=True)
-        bt.keyboard.set_keys(keycode.KC_RIGHT)
-    elif once_click == "切换上一个桌面":
-        print("切换上一个桌面")
-        if os_name:
-            bt.keyboard.set_modifiers(left_control=True, left_gui=True)
-        else:
-            bt.keyboard.set_modifiers(left_control=True)
-        bt.keyboard.set_keys(keycode.KC_LEFT)
-    elif once_click == "展示窗口":
-        print("展示窗口")
-        if os_name:
-            bt.keyboard.set_modifiers(left_gui=True)
-            bt.keyboard.set_keys(keycode.KC_TAB)
-        else:
-            bt.keyboard.set_modifiers(left_control=True)
-            bt.keyboard.set_keys(keycode.KC_UP)
-    elif once_click == "最小化":
-        print("最小化")
-        if os_name:
-            bt.keyboard.set_modifiers(left_control=True)
-            bt.keyboard.set_keys(keycode.KC_SPACE)
-            bt.keyboard.set_keys(keycode.KC_N)
-        else:
-            bt.keyboard.set_modifiers(left_gui=True)
-            bt.keyboard.set_keys(keycode.KC_M)
-    elif once_click == "跳转助记标签":
-        print("跳转助记标签")
-        if os_name:
-            bt.keyboard.set_modifiers(left_control=True, left_alt=True)
-        else:
-            bt.keyboard.set_modifiers(left_gui=True, left_alt=True)
-        bt.keyboard.set_keys(keycode.KC_F3)
-    elif once_click == "进格":
-        print("进格")
-        bt.keyboard.set_keys(keycode.KC_TAB)
-    elif once_click == "退格":
-        print("退格")
-        bt.keyboard.set_modifiers(left_shift=True)
-        bt.keyboard.set_keys(keycode.KC_TAB)
-    elif once_click == "撤回":
-        print("撤回")
-        if os_name:
-            bt.keyboard.set_modifiers(left_control=True)
-        else:
-            bt.keyboard.set_modifiers(left_gui=True)
-        bt.keyboard.set_keys(keycode.KC_Z)
-    elif once_click == "恢复":
-        print("恢复")
-        if os_name:
-            bt.keyboard.set_modifiers(left_control=True, left_shift=True)
-        else:
-            bt.keyboard.set_modifiers(left_gui=True, left_shift=True)
-        bt.keyboard.set_keys(keycode.KC_Z)
-    elif once_click == "关闭窗口":
-        print("关闭窗口")
-        if os_name:
-            bt.keyboard.set_modifiers(left_alt=True)
-            bt.keyboard.set_keys(keycode.KC_F4)
-        else:
-            bt.keyboard.set_modifiers(left_gui=True)
-            bt.keyboard.set_keys(keycode.KC_Q)
-    elif once_click == "注释":
-        print("注释")
-        if os_name:
-            bt.keyboard.set_modifiers(left_control=True)
-        else:
-            bt.keyboard.set_modifiers(left_gui=True)
-        bt.keyboard.set_keys(keycode.KC_SLASH)
-    elif once_click == "优化代码":
-        print("优化代码")
-        if os_name:
-            bt.keyboard.set_modifiers(left_gui=True, left_alt=True)
-        else:
-            bt.keyboard.set_modifiers(left_control=True, left_alt=True)
-        bt.keyboard.set_keys(keycode.KC_L)
-    elif once_click == "优化import":
-        print("优化import")
-        bt.keyboard.set_modifiers(left_control=True, left_alt=True)
-        bt.keyboard.set_keys(keycode.KC_O)
-    elif once_click == "光标末移":
-        print("光标末移")
-        bt.keyboard.set_modifiers(left_alt=True, left_shift=True)
-        bt.keyboard.set_keys(keycode.KC_G)
-    elif once_click == "连接行":
-        print("连接行")
-        bt.keyboard.set_modifiers(left_alt=True, left_shift=True)
-        bt.keyboard.set_keys(keycode.KC_J)
-    elif once_click is not str:
-        bt.keyboard.set_keys(once_click)
-    bt.keyboard.notify_hid_report()
-    key_show_clear()
-
-
-bt.active(True)
-# def bt_connect():
-#     while True:
-# 根据设备状态调整睡眠时间
-if bt.keyboard.get_state() is Keyboard.DEVICE_CONNECTED:
-    time.sleep(20)  # 设备已连接时，使用较短的睡眠时间以提高响应速度
-else:
-    # 如果设备空闲，则开始广播或直到设备连接
-    if bt.keyboard.get_state() is Keyboard.DEVICE_IDLE:
-        bt.keyboard.start_advertising()  # 开始广播
-        bt.wait_for_confirmation(120)  # 等待广播或连接
-        if bt.keyboard.get_state() is Keyboard.DEVICE_ADVERTISING:  # 如果仍在广播
-            bt.keyboard.stop_advertising()  # 则停止广播
-    time.sleep(2)  # 设备未连接时，使用较长的睡眠时间以节省电量
-
-
-# _thread.start_new_thread(bt_connect, ())
 
 
 # 监听旋钮事件
@@ -459,7 +226,7 @@ class KnobClickIncident:
                     print(f"右键按下")
                 if right_click_keep_time == 140:
                     print(f"右键按下超过{right_click_keep_time}毫秒")
-                    bt_show(keycode.KC_F13)
+                    bt_show(keycode.KC_F13, os_name, bt)
                 time.sleep_ms(1)
 
     def knob_right_click_up_time(self):
@@ -506,16 +273,16 @@ def movement():
         knob_a_rotate = get_knob_rotate()
         if knob_a_rotate == (0, -1):
             print(knob_a_rotate)
-            bt_show(keycode.KC_F16)
+            bt_show(keycode.KC_F16, os_name, bt)
         elif knob_a_rotate == (0, 1):
             print(knob_a_rotate)
-            bt_show(keycode.KC_F17)
+            bt_show(keycode.KC_F17, os_name, bt)
         elif knob_a_rotate == (-1, 0):
             print(knob_a_rotate)
-            bt_show(keycode.KC_F14)
+            bt_show(keycode.KC_F14, os_name, bt)
         elif knob_a_rotate == (1, 0):
             print(knob_a_rotate)
-            bt_show(keycode.KC_F15)
+            bt_show(keycode.KC_F15, os_name, bt)
 
         KCI.knob_double_click_down_incident()
         KCI.knob_left_click_down_incident()
@@ -526,7 +293,7 @@ def movement():
         if not anti_mis_contact_lock_button:
             if key_show is not None:
                 if mode_index < list(mode_texts)[-1]:
-                    bt_show(mode_texts[mode_index]["key"][key_show[1]][key_show[0]])
+                    bt_show(mode_texts[mode_index]["key"][key_show[1]][key_show[0]], os_name, bt)
                     time.sleep_ms(140)
                 if mode_index == list(mode_texts)[-1]:
                     buzzer.play(mode_texts[mode_index]["key"][key_show[1]][key_show[0]])

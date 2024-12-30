@@ -5,7 +5,11 @@ https://gitee.com/walkline/esp32-ble
 """
 
 
-from micropython import const
+#from micropython import const
+
+
+def const(x):
+    return x
 
 
 class KeyCode(object):
