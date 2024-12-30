@@ -1,15 +1,14 @@
 import time
 from machine import Pin, I2C, PWM
-
 from BTkeyboard.Buzzer import Buzzer
 from BTkeyboard.LED_ssd1306_screen import Run as oLED_run
 from BTkeyboard.bluetooth import Device as BluetoothDevice
 from BTkeyboard.keyboard import Key
 from BTkeyboard.keys_config import KeyCode
 from BTkeyboard.knob import Knob
-import ufont
-from hid_services import Keyboard
-from ssd1306 import SSD1306_I2C
+from lib import ufont
+from lib.hid_services import Keyboard
+from lib.ssd1306 import SSD1306_I2C
 
 # 指示灯
 big_led = Pin(33, Pin.OUT)
@@ -87,7 +86,7 @@ mode_texts = {
 # 初始化ssd1306 oLED屏幕
 i2c = I2C(0, sda=Pin(21), scl=Pin(22), freq=400000)
 ssd = SSD1306_I2C(128, 64, i2c)
-uFont = ufont.BMFont("unifont-14-12888-16.v3.bmf")
+uFont = ufont.BMFont("fonts/unifont-14-12888-16.v3.bmf")
 ssd_object = oLED_run(ssd=ssd, uFont=uFont)
 # 初始化蜂鸣器
 buzzer = Buzzer(PWM(Pin(32, Pin.OUT), freq=900, duty=0))
