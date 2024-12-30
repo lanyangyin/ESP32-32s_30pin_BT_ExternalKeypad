@@ -1,7 +1,4 @@
-import _thread
-import json
 import time
-
 from machine import Pin, I2C, PWM
 
 from BTkeyboard.Buzzer import Buzzer
@@ -10,9 +7,9 @@ from BTkeyboard.bluetooth import Device as BluetoothDevice
 from BTkeyboard.keyboard import Key
 from BTkeyboard.keys_config import KeyCode
 from BTkeyboard.knob import Knob
-from lib import ufont
-from lib.hid_services import Keyboard
-from lib.ssd1306 import SSD1306_I2C
+import ufont
+from hid_services import Keyboard
+from ssd1306 import SSD1306_I2C
 
 # 指示灯
 big_led = Pin(33, Pin.OUT)
@@ -25,15 +22,8 @@ knob_rotate_status = (0, 0)
 keycode = KeyCode()
 # 操作系统
 # 读取BTkeyboard/config.json文件，获取"设备系统"参数
-config_file_path = '/BTkeyboard/config.json'
 os_name_dict = {True: "Win", False: "MAC"}
-with open(config_file_path, 'r') as f:
-    config_data = json.load(f)
-    os_ = config_data.get("设备系统", "Unknown")
-if os_ == "Win":
-    os_name = True
-elif os_ == "MAC" or os_ == "Unknown":
-    os_name = False
+os_name = True
 anti_mis_contact_lock_button = False  # 防止误触锁定按钮，默认情况下不开启
 mode_index = 0
 mode_read_index = 0
@@ -97,11 +87,10 @@ mode_texts = {
 # 初始化ssd1306 oLED屏幕
 i2c = I2C(0, sda=Pin(21), scl=Pin(22), freq=400000)
 ssd = SSD1306_I2C(128, 64, i2c)
-uFont = ufont.BMFont("fonts/unifont-14-12888-16.v3.bmf")
+uFont = ufont.BMFont("/fonts/unifont-14-12888-16.v3.bmf")
 ssd_object = oLED_run(ssd=ssd, uFont=uFont)
 # 初始化蜂鸣器
 buzzer = Buzzer(PWM(Pin(32, Pin.OUT), freq=900, duty=0))
-# buzzer.test()
 # 创建蓝牙对象
 bt = BluetoothDevice("ESP32_Keyboard")
 # 初始化旋钮
@@ -346,22 +335,22 @@ def key_show_clear():
     bt.keyboard.notify_hid_report()
 
 
-def bt_connect():
-    while True:
-        # 根据设备状态调整睡眠时间
-        if bt.keyboard.get_state() is Keyboard.DEVICE_CONNECTED:
-            time.sleep(20)  # 设备已连接时，使用较短的睡眠时间以提高响应速度
-        else:
-            # 如果设备空闲，则开始广播或直到设备连接
-            if bt.keyboard.get_state() is Keyboard.DEVICE_IDLE:
-                bt.keyboard.start_advertising()  # 开始广播
-                bt.wait_for_confirmation(60)  # 等待广播或连接
-                if bt.keyboard.get_state() is Keyboard.DEVICE_ADVERTISING:  # 如果仍在广播
-                    bt.keyboard.stop_advertising()  # 则停止广播
-            time.sleep(2)  # 设备未连接时，使用较长的睡眠时间以节省电量
+# def bt_connect():
+#     while True:
+# 根据设备状态调整睡眠时间
+if bt.keyboard.get_state() is Keyboard.DEVICE_CONNECTED:
+    time.sleep(20)  # 设备已连接时，使用较短的睡眠时间以提高响应速度
+else:
+    # 如果设备空闲，则开始广播或直到设备连接
+    if bt.keyboard.get_state() is Keyboard.DEVICE_IDLE:
+        bt.keyboard.start_advertising()  # 开始广播
+        bt.wait_for_confirmation(120)  # 等待广播或连接
+        if bt.keyboard.get_state() is Keyboard.DEVICE_ADVERTISING:  # 如果仍在广播
+            bt.keyboard.stop_advertising()  # 则停止广播
+    time.sleep(2)  # 设备未连接时，使用较长的睡眠时间以节省电量
 
 
-_thread.start_new_thread(bt_connect, ())
+# _thread.start_new_thread(bt_connect, ())
 
 
 # 监听旋钮事件
@@ -483,12 +472,6 @@ class KnobClickIncident:
                 print(f"双键抬起,{double_click_keep_time}")
                 if double_click_keep_time < 70:
                     os_name = not os_name
-                    # 切换系统时，记录进BTkeyboard/config.json的“设备系统”参数中
-                    with open(config_file_path, 'r') as f:
-                        cfg_data = json.load(f)
-                    cfg_data["设备系统"] = os_name_dict[os_name]
-                    with open(config_file_path, 'w') as f:
-                        json.dump(cfg_data, f)
                     display_os()
             if left_click_keep_time:
                 print(f"左键抬起,{left_click_keep_time}")

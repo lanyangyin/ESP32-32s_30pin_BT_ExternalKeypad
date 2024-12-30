@@ -1,6 +1,6 @@
 import time
 
-from lib.hid_services import Keyboard
+from hid_services import Keyboard
 
 
 class Device:

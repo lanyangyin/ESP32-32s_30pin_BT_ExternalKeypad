@@ -1,6 +1,6 @@
 import math
 
-from fonts import type_matrix
+import type_matrix
 
 
 class Run:
