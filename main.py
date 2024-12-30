@@ -20,7 +20,6 @@ knob_rotate_right_status = 0
 knob_rotate_status = (0, 0)
 keycode = KeyCode()
 # 操作系统
-# 读取BTkeyboard/config.json文件，获取"设备系统"参数
 os_name_dict = {True: "Win", False: "MAC"}
 os_name = True
 anti_mis_contact_lock_button = False  # 防止误触锁定按钮，默认情况下不开启
@@ -110,9 +109,6 @@ def display_mode():
         ssd_object.ssd_type_matrix_text(icon, 64, 0, fill=True, show=True)
 
 
-display_mode()
-
-
 def display_os():
     """
     显示操作系统
@@ -122,9 +118,6 @@ def display_os():
     ssd_object.ssd_unicode(string=f"   ", x=32, y=11, font_size=8)
     ssd_object.ssd_normal_text(os_name_dict[os_name], 32, 11)
     ssd_object.ssd_normal_show()
-
-
-display_os()
 
 
 def display_lock():
@@ -137,6 +130,17 @@ def display_lock():
         ssd_object.ssd_type_matrix_text("关锁图标_32", 0, 0, fill=True, show=True)
     else:
         ssd_object.ssd_unicode(string=f" ", x=0, y=0, font_size=32, show=True)
+
+
+display_mode()
+display_os()
+display_lock()
+
+
+def key_show_clear():
+    bt.keyboard.set_modifiers()
+    bt.keyboard.set_keys()
+    bt.keyboard.notify_hid_report()
 
 
 def bt_show(once_click):
@@ -326,12 +330,6 @@ def bt_show(once_click):
         bt.keyboard.set_keys(once_click)
     bt.keyboard.notify_hid_report()
     key_show_clear()
-
-
-def key_show_clear():
-    bt.keyboard.set_modifiers()
-    bt.keyboard.set_keys()
-    bt.keyboard.notify_hid_report()
 
 
 bt.active(True)
