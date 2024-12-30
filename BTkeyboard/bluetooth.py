@@ -9,8 +9,8 @@ class Device:
         self.keyboard = Keyboard(Keyboard_nme)
         # 设置一个回调函数来捕获设备状态的变化
         self.keyboard.set_state_change_callback(self.keyboard_state_callback)
-        # # 启动键盘设备
-        self.keyboard.start()
+        # # # 启动键盘设备
+        # self.keyboard.start()
 
     # 捕获设备状态事件的函数
     def wait_for_confirmation(self, i: int):

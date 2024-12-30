@@ -87,7 +87,7 @@ mode_texts = {
 # 初始化ssd1306 oLED屏幕
 i2c = I2C(0, sda=Pin(21), scl=Pin(22), freq=400000)
 ssd = SSD1306_I2C(128, 64, i2c)
-uFont = ufont.BMFont("/fonts/unifont-14-12888-16.v3.bmf")
+uFont = ufont.BMFont("unifont-14-12888-16.v3.bmf")
 ssd_object = oLED_run(ssd=ssd, uFont=uFont)
 # 初始化蜂鸣器
 buzzer = Buzzer(PWM(Pin(32, Pin.OUT), freq=900, duty=0))
@@ -335,6 +335,7 @@ def key_show_clear():
     bt.keyboard.notify_hid_report()
 
 
+bt.active(True)
 # def bt_connect():
 #     while True:
 # 根据设备状态调整睡眠时间
