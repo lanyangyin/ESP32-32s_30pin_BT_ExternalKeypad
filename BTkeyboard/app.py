@@ -30,10 +30,17 @@ rp = {0: (0, 0), 1: (0, 0), 2: (0, 0), 3: (0, 0)}
 lp = {0: (0, 0), 1: (0, 0), 2: (0, 0), 3: (0, 0)}
 keyboard_mode_order = ["原始", "代码", "常规", "P S", "L2D", "OBS", "音乐"]
 keyboard_mode = {"原始": True, "代码": True, "常规": True, "P S": True, "L2D": True, "OBS": True, "音乐": False}
+with open(f"BTkeyboard/config.json", "r") as f:
     display_mode = json.load(f)["display_mode"]
+with open(f"BTkeyboard/config.json", "r") as f:
     lock_mode = json.load(f)["lock_mode"]
+with open(f"BTkeyboard/config.json", "r") as f:
     os_name = json.load(f)["os_name"]
+with open(f"BTkeyboard/keyboard_layout_mode/{keyboard_mode_order[display_mode]}.json", "r") as f:
     _keys = json.load(f)["data"]
+with open(f"BTkeyboard/knob_rl_layout_mode/{keyboard_mode_order[display_mode]}.json", "r") as f:
+    _knobs = json.load(f)["data"]
+with open(f"BTkeyboard/buzzer_data/{musical_scale}.json", "r") as f:
     tone_dict = json.load(f)
 
 
@@ -83,16 +90,18 @@ def ssd_type_matrix_text(font_data: dict, x: int, y: int, show: bool = False, cl
 
 # 初始化屏幕
 # 显示标题
-uFont.text(display=ssd, string=keyboard_mode_order[display_mode], x=0, y=32, color=1, font_size=32, show=True,
-           clear=False, half_char=True)
+uFont.text(display=ssd, string=keyboard_mode_order[display_mode], x=0, y=32, font_size=32, show=True, half_char=True)
+with open(f"BTkeyboard/keyboard_mode_type_matrix/{keyboard_mode_order[display_mode]}.json", "r") as f:
     ssd_type_matrix_text(json.load(f), x=64, y=0, show=True, fill=True)
 # 显示锁定模式
 if lock_mode:
+    with open(f"BTkeyboard/lock_type_matrix/1.json", "r") as f:
         ssd_type_matrix_text(json.load(f), x=0, y=0, show=True, fill=True)
 else:
+    with open(f"BTkeyboard/lock_type_matrix/0.json", "r") as f:
         ssd_type_matrix_text(json.load(f), x=0, y=0, show=True, fill=True)
 # 显示操作系统
-uFont.text(display=ssd, string={True: "O", False: "A"}[os_name], x=32, y=0, color=1, font_size=32)
+uFont.text(display=ssd, string={True: "O", False: "A"}[os_name], x=32, y=0, font_size=32)
 ssd.show()
 
 # 初始化指示灯
@@ -119,9 +128,11 @@ while True:
         if rp == {0: (0, 0), 1: (0, 1), 2: (1, 1), 3: (1, 0)}:  # 顺时针
             rp = {0: (0, 0), 1: (0, 0), 2: (0, 0), 3: (0, 0)}
             # 音量+
+            KnobClickIncident(bt, _knobs[3], os_name)
         elif rp == {0: (0, 0), 1: (1, 0), 2: (1, 1), 3: (0, 1)}:  # 逆时针
             rp = {0: (0, 0), 1: (0, 0), 2: (0, 0), 3: (0, 0)}
             # 音量-
+            KnobClickIncident(bt, _knobs[2], os_name)
         if lnt != lp[3]:
             lp[0] = lp[1]
             lp[1] = lp[2]
@@ -130,9 +141,11 @@ while True:
         if lp == {0: (0, 0), 1: (0, 1), 2: (1, 1), 3: (1, 0)}:  # 顺时针
             lp = {0: (0, 0), 1: (0, 0), 2: (0, 0), 3: (0, 0)}
             # 亮度+
+            KnobClickIncident(bt, _knobs[1], os_name)
         elif lp == {0: (0, 0), 1: (1, 0), 2: (1, 1), 3: (0, 1)}:  # 逆时针
             lp = {0: (0, 0), 1: (0, 0), 2: (0, 0), 3: (0, 0)}
             # 亮度-
+            KnobClickIncident(bt, _knobs[0], os_name)
         del rnt, lnt
 
         # 读取旋钮按下状态
@@ -149,12 +162,16 @@ while True:
                 print(f"双键按下超过{double_click_keep_time}毫秒")
                 lock_mode = not lock_mode
                 if lock_mode:
+                    with open(f"BTkeyboard/lock_type_matrix/1.json", "r") as f:
                         ssd_type_matrix_text(json.load(f), x=0, y=0, show=True, fill=True)
                 else:
+                    with open(f"BTkeyboard/lock_type_matrix/0.json", "r") as f:
                         ssd_type_matrix_text(json.load(f), x=0, y=0, show=True, fill=True)
                 # 切换锁定模式时，记录进BTkeyboard/config.json的“设备锁定”参数中
+                with open(f"BTkeyboard/config.json", "r") as f:
                     config = json.load(f)
                     config["lock_mode"] = lock_mode
+                with open(f"BTkeyboard/config.json", "w") as f:
                     print(config)
                     f.write(json.dumps(config))
                 del config
@@ -215,38 +232,52 @@ while True:
                 if double_click_keep_time < 100:
                     os_name = not os_name
                     # 切换系统时，记录进BTkeyboard/config.json的“设备系统”参数中
+                    with open(f"BTkeyboard/config.json", "r") as f:
                         config = json.load(f)
                         config["os_name"] = os_name
+                    with open(f"BTkeyboard/config.json", "w") as f:
                         print(config)
                         f.write(json.dumps(config))
                     del config
-                    uFont.text(display=ssd, string={True: "O", False: "A"}[os_name], x=32, y=0, color=1, font_size=32)
+                    uFont.text(display=ssd, string={True: "O", False: "A"}[os_name], x=32, y=0, font_size=32)
                     ssd.show()
             if left_click_keep_time:
                 print(f"左键抬起,{left_click_keep_time}")
                 if right_click_keep_time < 100:
                     display_mode = (display_mode - 1) % len(keyboard_mode_order)
+                    with open(f"BTkeyboard/config.json", "r") as f:
                         config = json.load(f)
                         config["display_mode"] = display_mode
+                    with open(f"BTkeyboard/config.json", "w") as f:
                         print(config)
                         f.write(json.dumps(config))
                     del config
+                    with open(f"BTkeyboard/keyboard_layout_mode/{keyboard_mode_order[display_mode]}.json", "r") as f:
                         _keys = json.load(f)["data"]
-                    uFont.text(display=ssd, string=keyboard_mode_order[display_mode], x=0, y=32, color=1, font_size=32,
-                               show=True, clear=False, half_char=True)
+                    with open(f"BTkeyboard/knob_rl_layout_mode/{keyboard_mode_order[display_mode]}.json", "r") as f:
+                        _knobs = json.load(f)["data"]
+                    uFont.text(display=ssd, string=keyboard_mode_order[display_mode], x=0, y=32, font_size=32,
+                               show=True, half_char=True)
+                    with open(f"BTkeyboard/keyboard_mode_type_matrix/{keyboard_mode_order[display_mode]}.json", "r") as f:
                         ssd_type_matrix_text(json.load(f), x=64, y=0, show=True, fill=True)
             if right_click_keep_time:
                 print(f"右键抬起,{right_click_keep_time}")
                 if right_click_keep_time < 100:
                     display_mode = (display_mode + 1) % len(keyboard_mode_order)
+                    with open(f"BTkeyboard/config.json", "r") as f:
                         config = json.load(f)
                         config["display_mode"] = display_mode
+                    with open(f"BTkeyboardconfig.json", "w") as f:
                         print(config)
                         f.write(json.dumps(config))
                     del config
+                    with open(f"BTkeyboard/keyboard_layout_mode/{keyboard_mode_order[display_mode]}.json", "r") as f:
                         _keys = json.load(f)["data"]
-                    uFont.text(display=ssd, string=keyboard_mode_order[display_mode], x=0, y=32, color=1, font_size=32,
-                               show=True, clear=False, half_char=True)
+                    with open(f"BTkeyboard/knob_rl_layout_mode/{keyboard_mode_order[display_mode]}.json", "r") as f:
+                        _knobs = json.load(f)["data"]
+                    uFont.text(display=ssd, string=keyboard_mode_order[display_mode], x=0, y=32, font_size=32,
+                               show=True, half_char=True)
+                    with open(f"BTkeyboard/keyboard_mode_type_matrix/{keyboard_mode_order[display_mode]}.json", "r") as f:
                         ssd_type_matrix_text(json.load(f), x=64, y=0, show=True, fill=True)
             double_click_keep_time = 0
             left_click_keep_time = 0
