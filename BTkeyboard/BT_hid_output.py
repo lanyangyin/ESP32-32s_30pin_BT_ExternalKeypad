@@ -1,5 +1,5 @@
 
-def KnobClickIncident(bt, once_click, os_name):
+def OutputHidIncident(bt, once_click, os_name):
     if once_click == "新建文件夹":
         print("创建文件夹")
         if os_name:

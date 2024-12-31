@@ -4,7 +4,7 @@ import time
 
 from machine import Pin, I2C, PWM
 from BTkeyboard.bluetooth import Device as BluetoothDevice
-from BTkeyboard.o_KnobClickIncident import KnobClickIncident
+from BTkeyboard.BT_hid_output import KnobClickIncident
 from lib import ufont
 from lib.hid_services import Keyboard
 from lib.ssd1306 import SSD1306_I2C

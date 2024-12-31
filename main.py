@@ -4,7 +4,7 @@ import time
 
 from machine import Pin, I2C, PWM
 from BTkeyboard.bluetooth import Device as BluetoothDevice
-from BTkeyboard.o_KnobClickIncident import KnobClickIncident
+from BTkeyboard.BT_hid_output import OutputHidIncident
 from lib import ufont
 from lib.hid_services import Keyboard
 from lib.ssd1306 import SSD1306_I2C
@@ -36,12 +36,13 @@ with open(f"BTkeyboard/config.json", "r") as f:
     lock_mode = json.load(f)["lock_mode"]
 with open(f"BTkeyboard/config.json", "r") as f:
     os_name = json.load(f)["os_name"]
-with open(f"BTkeyboard/keyboard_layout_mode/{keyboard_mode_order[display_mode]}.json", "r") as f:
+with open(f"BTkeyboard/mode_keyboard_data/{keyboard_mode_order[display_mode]}.json", "r") as f:
     _keys = json.load(f)["data"]
-with open(f"BTkeyboard/knob_rl_layout_mode/{keyboard_mode_order[display_mode]}.json", "r") as f:
+with open(f"BTkeyboard/mode_knob_Rotate_data/{keyboard_mode_order[display_mode]}.json", "r") as f:
     _knobs = json.load(f)["data"]
 with open(f"BTkeyboard/buzzer_data/{musical_scale}.json", "r") as f:
     tone_dict = json.load(f)
+del f
 
 
 def ssd_type_matrix_text(font_data: dict, x: int, y: int, show: bool = False, clear: bool = False,
@@ -91,7 +92,7 @@ def ssd_type_matrix_text(font_data: dict, x: int, y: int, show: bool = False, cl
 # 初始化屏幕
 # 显示标题
 uFont.text(display=ssd, string=keyboard_mode_order[display_mode], x=0, y=32, font_size=32, show=True, half_char=True)
-with open(f"BTkeyboard/keyboard_mode_type_matrix/{keyboard_mode_order[display_mode]}.json", "r") as f:
+with open(f"BTkeyboard/mode_type_matrix/{keyboard_mode_order[display_mode]}.json", "r") as f:
     ssd_type_matrix_text(json.load(f), x=64, y=0, show=True, fill=True)
 # 显示锁定模式
 if lock_mode:
@@ -111,8 +112,6 @@ pilot_lamp.value(0)
 Buzzer.duty(0)
 Buzzer.freq(40000000)
 
-del f
-
 while True:
     # 蓝牙连接
     if bt.keyboard.get_state() is Keyboard.DEVICE_CONNECTED:
@@ -128,11 +127,11 @@ while True:
         if rp == {0: (0, 0), 1: (0, 1), 2: (1, 1), 3: (1, 0)}:  # 顺时针
             rp = {0: (0, 0), 1: (0, 0), 2: (0, 0), 3: (0, 0)}
             # 音量+
-            KnobClickIncident(bt, _knobs[3], os_name)
+            OutputHidIncident(bt, _knobs[3], os_name)
         elif rp == {0: (0, 0), 1: (1, 0), 2: (1, 1), 3: (0, 1)}:  # 逆时针
             rp = {0: (0, 0), 1: (0, 0), 2: (0, 0), 3: (0, 0)}
             # 音量-
-            KnobClickIncident(bt, _knobs[2], os_name)
+            OutputHidIncident(bt, _knobs[2], os_name)
         if lnt != lp[3]:
             lp[0] = lp[1]
             lp[1] = lp[2]
@@ -141,11 +140,11 @@ while True:
         if lp == {0: (0, 0), 1: (0, 1), 2: (1, 1), 3: (1, 0)}:  # 顺时针
             lp = {0: (0, 0), 1: (0, 0), 2: (0, 0), 3: (0, 0)}
             # 亮度+
-            KnobClickIncident(bt, _knobs[1], os_name)
+            OutputHidIncident(bt, _knobs[1], os_name)
         elif lp == {0: (0, 0), 1: (1, 0), 2: (1, 1), 3: (0, 1)}:  # 逆时针
             lp = {0: (0, 0), 1: (0, 0), 2: (0, 0), 3: (0, 0)}
             # 亮度-
-            KnobClickIncident(bt, _knobs[0], os_name)
+            OutputHidIncident(bt, _knobs[0], os_name)
         del rnt, lnt
 
         # 读取旋钮按下状态
@@ -252,13 +251,13 @@ while True:
                         print(config)
                         f.write(json.dumps(config))
                     del config
-                    with open(f"BTkeyboard/keyboard_layout_mode/{keyboard_mode_order[display_mode]}.json", "r") as f:
+                    with open(f"BTkeyboard/mode_keyboard_data/{keyboard_mode_order[display_mode]}.json", "r") as f:
                         _keys = json.load(f)["data"]
-                    with open(f"BTkeyboard/knob_rl_layout_mode/{keyboard_mode_order[display_mode]}.json", "r") as f:
+                    with open(f"BTkeyboard/mode_knob_Rotate_data/{keyboard_mode_order[display_mode]}.json", "r") as f:
                         _knobs = json.load(f)["data"]
                     uFont.text(display=ssd, string=keyboard_mode_order[display_mode], x=0, y=32, font_size=32,
                                show=True, half_char=True)
-                    with open(f"BTkeyboard/keyboard_mode_type_matrix/{keyboard_mode_order[display_mode]}.json", "r") as f:
+                    with open(f"BTkeyboard/mode_type_matrix/{keyboard_mode_order[display_mode]}.json", "r") as f:
                         ssd_type_matrix_text(json.load(f), x=64, y=0, show=True, fill=True)
             if right_click_keep_time:
                 print(f"右键抬起,{right_click_keep_time}")
@@ -271,13 +270,13 @@ while True:
                         print(config)
                         f.write(json.dumps(config))
                     del config
-                    with open(f"BTkeyboard/keyboard_layout_mode/{keyboard_mode_order[display_mode]}.json", "r") as f:
+                    with open(f"BTkeyboard/mode_keyboard_data/{keyboard_mode_order[display_mode]}.json", "r") as f:
                         _keys = json.load(f)["data"]
-                    with open(f"BTkeyboard/knob_rl_layout_mode/{keyboard_mode_order[display_mode]}.json", "r") as f:
+                    with open(f"BTkeyboard/mode_knob_Rotate_data/{keyboard_mode_order[display_mode]}.json", "r") as f:
                         _knobs = json.load(f)["data"]
                     uFont.text(display=ssd, string=keyboard_mode_order[display_mode], x=0, y=32, font_size=32,
                                show=True, half_char=True)
-                    with open(f"BTkeyboard/keyboard_mode_type_matrix/{keyboard_mode_order[display_mode]}.json", "r") as f:
+                    with open(f"BTkeyboard/mode_type_matrix/{keyboard_mode_order[display_mode]}.json", "r") as f:
                         ssd_type_matrix_text(json.load(f), x=64, y=0, show=True, fill=True)
             double_click_keep_time = 0
             left_click_keep_time = 0
@@ -303,7 +302,7 @@ while True:
                 if line_col is not None:
                     print(line_col)  # 返回按下的按键
                     once_click = _keys[line_col[0]][line_col[1]]
-                    KnobClickIncident(bt, _keys[line_col[0]][line_col[1]], os_name)
+                    OutputHidIncident(bt, _keys[line_col[0]][line_col[1]], os_name)
                     time.sleep_ms(170)
             else:
                 if line_col is not None:
@@ -321,4 +320,4 @@ while True:
             bt.wait_for_confirmation(60)  # 等待广播或连接
             if bt.keyboard.get_state() is Keyboard.DEVICE_ADVERTISING:  # 如果仍在广播
                 bt.keyboard.stop_advertising()  # 则停止广播
-        time.sleep(2)  # 设备未连接时，使用较长的睡眠时间以节省电量
+        time.sleep(2)
