@@ -10,7 +10,7 @@ from lib.hid_services import Keyboard
 from lib.ssd1306 import SSD1306_I2C
 
 # 创建蜂鸣器对象
-# Buzzer = PWM(Pin(32, Pin.OUT))
+Buzzer = PWM(Pin(32, Pin.OUT))
 # 创建指示灯对象
 pilot_lamp = Pin(33, Pin.OUT)
 # 创建蓝牙对象
@@ -108,8 +108,8 @@ ssd.show()
 pilot_lamp.value(0)
 
 # 初始化蜂鸣器
-# Buzzer.duty(0)
-# Buzzer.freq(40000000)
+Buzzer.duty(0)
+Buzzer.freq(40000000)
 
 del f
 
