@@ -306,12 +306,12 @@ while True:
                     KnobClickIncident(bt, _keys[line_col[0]][line_col[1]], os_name)
                     time.sleep_ms(170)
             else:
-                # if line_col is not None:
-                #     Buzzer.duty(900)
-                #     Buzzer.freq(tone_dict[_keys[line_col[0]][line_col[1]]])
-                # else:
-                #     Buzzer.duty(0)
-                #     Buzzer.freq(40000000)
+                if line_col is not None:
+                    Buzzer.duty(900)
+                    Buzzer.freq(tone_dict[_keys[line_col[0]][line_col[1]]])
+                else:
+                    Buzzer.duty(0)
+                    Buzzer.freq(40000000)
                 pass
     else:
         pilot_lamp.value(0)  # 关闭飞行灯
