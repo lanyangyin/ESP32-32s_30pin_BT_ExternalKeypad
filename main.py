@@ -134,6 +134,158 @@ else:
     pwm_pin.value(0)
 
 while True:
+    # 读取旋钮按下状态
+    knob_click = Pin(25, Pin.IN, Pin.PULL_DOWN).value(), Pin(26, Pin.IN, Pin.PULL_DOWN).value()
+    if knob_click == (1, 1):
+        left_click_keep_time = 0
+        right_click_keep_time = 0
+        left_click_ready_time = 0
+        right_click_ready_time = 0
+        double_click_keep_time += 1
+        if double_click_keep_time == 1:
+            print(f"双键按下")
+        if double_click_keep_time == 140:
+            print(f"双键按下超过{double_click_keep_time}毫秒")
+            lock_mode = not lock_mode
+            if lock_mode:
+                with open(f"BTkeyboard/lock_type_matrix/1.json", "r") as f:
+                    ssd_type_matrix_text(json.load(f), x=0, y=0, show=True, fill=True)
+            else:
+                with open(f"BTkeyboard/lock_type_matrix/0.json", "r") as f:
+                    ssd_type_matrix_text(json.load(f), x=0, y=0, show=True, fill=True)
+            # 切换锁定模式时，记录进BTkeyboard/config.json的“设备锁定”参数中
+            with open(f"BTkeyboard/config.json", "r") as f:
+                config = json.load(f)
+                config["lock_mode"] = lock_mode
+            with open(f"BTkeyboard/config.json", "w") as f:
+                print(config)
+                f.write(json.dumps(config))
+            del config
+        time.sleep_ms(1)
+    if knob_click == (1, 0):
+        # 防止双键按下抬起时左键的误触发，
+        # 双键按下后抬起右键后，这时左键的按下时间为预备时间，
+        # 预备时间时双键按下时间不会清空，依然视为双键按下
+        # 超出预备时间才算真正开始按下左键
+        if double_click_keep_time > 0:
+            left_click_ready_time += 1
+            if left_click_ready_time == 1:
+                print(f"双键按下后，左键准备")
+            if left_click_ready_time == 50:  # 预备持续时间
+                print(f"左键预备结束")
+                double_click_keep_time = 0
+        if double_click_keep_time == 0:
+            double_click_keep_time = 0
+            right_click_keep_time = 0
+            left_click_ready_time = 0
+            right_click_ready_time = 0
+            left_click_keep_time += 1
+            if left_click_keep_time == 1:
+                print(f"左键按下")
+            if left_click_keep_time == 140:
+                print(f"左键按下超过{left_click_keep_time}秒")
+        time.sleep_ms(1)
+    if knob_click == (0, 1):
+        # 防止双键按下抬起时右键的误触发，
+        # 双键按下后抬起左键后，这时右键的按下时间为预备时间，
+        # 预备时间时双键按下时间不会清空，依然视为双键按下
+        # 超出预备时间才算真正开始按下右键
+        if double_click_keep_time > 0:
+            right_click_ready_time += 1
+            if right_click_ready_time == 1:
+                print(f"双键按下后，右键预备")
+            if right_click_ready_time == 50:  # 预备持续时间
+                print(f"右键预备结束")
+                double_click_keep_time = 0
+        if double_click_keep_time == 0:
+            double_click_keep_time = 0
+            left_click_keep_time = 0
+            right_click_keep_time += 1
+            left_click_ready_time = 0
+            right_click_ready_time = 0
+            if right_click_keep_time == 1:
+                print(f"右键按下")
+            if right_click_keep_time == 140:
+                print(f"右键按下超过{right_click_keep_time}毫秒")
+                if bt.keyboard.get_state() is Keyboard.DEVICE_CONNECTED:
+                    bt.keyboard.set_keys(0x68)
+                    bt.keyboard.notify_hid_report()
+                    bt.keyboard.set_keys()
+                    bt.keyboard.notify_hid_report()
+        time.sleep_ms(1)
+    if knob_click == (0, 0):
+        if double_click_keep_time:
+            print(f"双键抬起,{double_click_keep_time}")
+            if double_click_keep_time < 100:
+                os_name = not os_name
+                # 切换系统时，记录进BTkeyboard/config.json的“设备系统”参数中
+                with open(f"BTkeyboard/config.json", "r") as f:
+                    config = json.load(f)
+                    config["os_name"] = os_name
+                with open(f"BTkeyboard/config.json", "w") as f:
+                    print(config)
+                    f.write(json.dumps(config))
+                del config
+                uFont.text(display=ssd, string={True: "O", False: "A"}[os_name], x=32, y=0, font_size=32)
+                ssd.show()
+        if left_click_keep_time:
+            print(f"左键抬起,{left_click_keep_time}")
+            if right_click_keep_time < 100:
+                mode_num = (mode_num - 1) % len(keyboard_mode_list)
+                # 初始化蜂鸣器
+                if not not_music_mode[keyboard_mode_list[mode_num]]:
+                    # 创建蜂鸣器对象
+                    Buzzer = PWM(Pin(32, Pin.OUT), freq=40000000, duty=0)
+                else:
+                    Buzzer.deinit()
+                    pwm_pin.value(0)
+                with open(f"BTkeyboard/config.json", "r") as f:
+                    config = json.load(f)
+                    config["mode_num"] = mode_num
+                with open(f"BTkeyboard/config.json", "w") as f:
+                    print(config)
+                    f.write(json.dumps(config))
+                del config
+                with open(f"BTkeyboard/mode_keyboard_data/{keyboard_mode_list[mode_num]}.json", "r") as f:
+                    _keys = json.load(f)["data"]
+                with open(f"BTkeyboard/mode_knob_Rotate_data/{keyboard_mode_list[mode_num]}.json", "r") as f:
+                    _knobs = json.load(f)["data"]
+                uFont.text(display=ssd, string=keyboard_mode_list[mode_num], x=0, y=32, font_size=32,
+                           show=True, half_char=True)
+                with open(f"BTkeyboard/mode_type_matrix/{keyboard_mode_list[mode_num]}.json", "r") as f:
+                    ssd_type_matrix_text(json.load(f), x=64, y=0, show=True, fill=True)
+        if right_click_keep_time:
+            print(f"右键抬起,{right_click_keep_time}")
+            if right_click_keep_time < 100:
+                mode_num = (mode_num + 1) % len(keyboard_mode_list)
+                # 初始化蜂鸣器
+                if not not_music_mode[keyboard_mode_list[mode_num]]:
+                    # 创建蜂鸣器对象
+                    Buzzer = PWM(Pin(32, Pin.OUT), freq=40000000, duty=0)
+                else:
+                    Buzzer.deinit()
+                    pwm_pin.value(0)
+                with open(f"BTkeyboard/config.json", "r") as f:
+                    config = json.load(f)
+                    config["mode_num"] = mode_num
+                with open(f"BTkeyboardconfig.json", "w") as f:
+                    print(config)
+                    f.write(json.dumps(config))
+                del config
+                with open(f"BTkeyboard/mode_keyboard_data/{keyboard_mode_list[mode_num]}.json", "r") as f:
+                    _keys = json.load(f)["data"]
+                with open(f"BTkeyboard/mode_knob_Rotate_data/{keyboard_mode_list[mode_num]}.json", "r") as f:
+                    _knobs = json.load(f)["data"]
+                uFont.text(display=ssd, string=keyboard_mode_list[mode_num], x=0, y=32, font_size=32,
+                           show=True, half_char=True)
+                with open(f"BTkeyboard/mode_type_matrix/{keyboard_mode_list[mode_num]}.json", "r") as f:
+                    ssd_type_matrix_text(json.load(f), x=64, y=0, show=True, fill=True)
+        double_click_keep_time = 0
+        left_click_keep_time = 0
+        right_click_keep_time = 0
+        left_click_ready_time = 0
+        right_click_ready_time = 0
+
     # 蓝牙连接
     if bt.keyboard.get_state() is Keyboard.DEVICE_CONNECTED:
         pilot_lamp.value(1)
@@ -167,157 +319,6 @@ while True:
             # 亮度-
             OutputHidIncident(bt, _knobs[0], os_name)
         del rnt, lnt
-
-        # 读取旋钮按下状态
-        knob_click = Pin(25, Pin.IN, Pin.PULL_DOWN).value(), Pin(26, Pin.IN, Pin.PULL_DOWN).value()
-        if knob_click == (1, 1):
-            left_click_keep_time = 0
-            right_click_keep_time = 0
-            left_click_ready_time = 0
-            right_click_ready_time = 0
-            double_click_keep_time += 1
-            if double_click_keep_time == 1:
-                print(f"双键按下")
-            if double_click_keep_time == 140:
-                print(f"双键按下超过{double_click_keep_time}毫秒")
-                lock_mode = not lock_mode
-                if lock_mode:
-                    with open(f"BTkeyboard/lock_type_matrix/1.json", "r") as f:
-                        ssd_type_matrix_text(json.load(f), x=0, y=0, show=True, fill=True)
-                else:
-                    with open(f"BTkeyboard/lock_type_matrix/0.json", "r") as f:
-                        ssd_type_matrix_text(json.load(f), x=0, y=0, show=True, fill=True)
-                # 切换锁定模式时，记录进BTkeyboard/config.json的“设备锁定”参数中
-                with open(f"BTkeyboard/config.json", "r") as f:
-                    config = json.load(f)
-                    config["lock_mode"] = lock_mode
-                with open(f"BTkeyboard/config.json", "w") as f:
-                    print(config)
-                    f.write(json.dumps(config))
-                del config
-            time.sleep_ms(1)
-        if knob_click == (1, 0):
-            # 防止双键按下抬起时左键的误触发，
-            # 双键按下后抬起右键后，这时左键的按下时间为预备时间，
-            # 预备时间时双键按下时间不会清空，依然视为双键按下
-            # 超出预备时间才算真正开始按下左键
-            if double_click_keep_time > 0:
-                left_click_ready_time += 1
-                if left_click_ready_time == 1:
-                    print(f"双键按下后，左键准备")
-                if left_click_ready_time == 50:  # 预备持续时间
-                    print(f"左键预备结束")
-                    double_click_keep_time = 0
-            if double_click_keep_time == 0:
-                double_click_keep_time = 0
-                right_click_keep_time = 0
-                left_click_ready_time = 0
-                right_click_ready_time = 0
-                left_click_keep_time += 1
-                if left_click_keep_time == 1:
-                    print(f"左键按下")
-                if left_click_keep_time == 140:
-                    print(f"左键按下超过{left_click_keep_time}秒")
-            time.sleep_ms(1)
-        if knob_click == (0, 1):
-            # 防止双键按下抬起时右键的误触发，
-            # 双键按下后抬起左键后，这时右键的按下时间为预备时间，
-            # 预备时间时双键按下时间不会清空，依然视为双键按下
-            # 超出预备时间才算真正开始按下右键
-            if double_click_keep_time > 0:
-                right_click_ready_time += 1
-                if right_click_ready_time == 1:
-                    print(f"双键按下后，右键预备")
-                if right_click_ready_time == 50:  # 预备持续时间
-                    print(f"右键预备结束")
-                    double_click_keep_time = 0
-            if double_click_keep_time == 0:
-                double_click_keep_time = 0
-                left_click_keep_time = 0
-                right_click_keep_time += 1
-                left_click_ready_time = 0
-                right_click_ready_time = 0
-                if right_click_keep_time == 1:
-                    print(f"右键按下")
-                if right_click_keep_time == 140:
-                    print(f"右键按下超过{right_click_keep_time}毫秒")
-                    bt.keyboard.set_keys(0x68)
-                    bt.keyboard.notify_hid_report()
-                    bt.keyboard.set_keys()
-                    bt.keyboard.notify_hid_report()
-            time.sleep_ms(1)
-        if knob_click == (0, 0):
-            if double_click_keep_time:
-                print(f"双键抬起,{double_click_keep_time}")
-                if double_click_keep_time < 100:
-                    os_name = not os_name
-                    # 切换系统时，记录进BTkeyboard/config.json的“设备系统”参数中
-                    with open(f"BTkeyboard/config.json", "r") as f:
-                        config = json.load(f)
-                        config["os_name"] = os_name
-                    with open(f"BTkeyboard/config.json", "w") as f:
-                        print(config)
-                        f.write(json.dumps(config))
-                    del config
-                    uFont.text(display=ssd, string={True: "O", False: "A"}[os_name], x=32, y=0, font_size=32)
-                    ssd.show()
-            if left_click_keep_time:
-                print(f"左键抬起,{left_click_keep_time}")
-                if right_click_keep_time < 100:
-                    mode_num = (mode_num - 1) % len(keyboard_mode_list)
-                    # 初始化蜂鸣器
-                    if not not_music_mode[keyboard_mode_list[mode_num]]:
-                        # 创建蜂鸣器对象
-                        Buzzer = PWM(Pin(32, Pin.OUT), freq=40000000, duty=0)
-                    else:
-                        Buzzer.deinit()
-                        pwm_pin.value(0)
-                    with open(f"BTkeyboard/config.json", "r") as f:
-                        config = json.load(f)
-                        config["mode_num"] = mode_num
-                    with open(f"BTkeyboard/config.json", "w") as f:
-                        print(config)
-                        f.write(json.dumps(config))
-                    del config
-                    with open(f"BTkeyboard/mode_keyboard_data/{keyboard_mode_list[mode_num]}.json", "r") as f:
-                        _keys = json.load(f)["data"]
-                    with open(f"BTkeyboard/mode_knob_Rotate_data/{keyboard_mode_list[mode_num]}.json", "r") as f:
-                        _knobs = json.load(f)["data"]
-                    uFont.text(display=ssd, string=keyboard_mode_list[mode_num], x=0, y=32, font_size=32,
-                               show=True, half_char=True)
-                    with open(f"BTkeyboard/mode_type_matrix/{keyboard_mode_list[mode_num]}.json", "r") as f:
-                        ssd_type_matrix_text(json.load(f), x=64, y=0, show=True, fill=True)
-            if right_click_keep_time:
-                print(f"右键抬起,{right_click_keep_time}")
-                if right_click_keep_time < 100:
-                    mode_num = (mode_num + 1) % len(keyboard_mode_list)
-                    # 初始化蜂鸣器
-                    if not not_music_mode[keyboard_mode_list[mode_num]]:
-                        # 创建蜂鸣器对象
-                        Buzzer = PWM(Pin(32, Pin.OUT), freq=40000000, duty=0)
-                    else:
-                        Buzzer.deinit()
-                        pwm_pin.value(0)
-                    with open(f"BTkeyboard/config.json", "r") as f:
-                        config = json.load(f)
-                        config["mode_num"] = mode_num
-                    with open(f"BTkeyboardconfig.json", "w") as f:
-                        print(config)
-                        f.write(json.dumps(config))
-                    del config
-                    with open(f"BTkeyboard/mode_keyboard_data/{keyboard_mode_list[mode_num]}.json", "r") as f:
-                        _keys = json.load(f)["data"]
-                    with open(f"BTkeyboard/mode_knob_Rotate_data/{keyboard_mode_list[mode_num]}.json", "r") as f:
-                        _knobs = json.load(f)["data"]
-                    uFont.text(display=ssd, string=keyboard_mode_list[mode_num], x=0, y=32, font_size=32,
-                               show=True, half_char=True)
-                    with open(f"BTkeyboard/mode_type_matrix/{keyboard_mode_list[mode_num]}.json", "r") as f:
-                        ssd_type_matrix_text(json.load(f), x=64, y=0, show=True, fill=True)
-            double_click_keep_time = 0
-            left_click_keep_time = 0
-            right_click_keep_time = 0
-            left_click_ready_time = 0
-            right_click_ready_time = 0
 
         # 键盘事件
         if not lock_mode:
