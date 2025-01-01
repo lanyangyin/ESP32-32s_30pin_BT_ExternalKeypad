@@ -37,7 +37,7 @@ bt.active(True)
 ssd = SSD1306_I2C(128, 64, I2C(0, sda=Pin(21), scl=Pin(22), freq=400000))
 uFont = ufont.BMFont("fonts/unifont-14-12888-16.v3.bmf")
 # 定义全局变量
-musical_scale = 2
+musical_scale = 2  # 音阶
 double_click_keep_time = 0
 left_click_keep_time = 0
 right_click_keep_time = 0
@@ -45,17 +45,21 @@ left_click_ready_time = 0
 right_click_ready_time = 0
 rp = {0: (0, 0), 1: (0, 0), 2: (0, 0), 3: (0, 0)}
 lp = {0: (0, 0), 1: (0, 0), 2: (0, 0), 3: (0, 0)}
-keyboard_mode_list = ["原始", "代码", "常规", "P S", "L2D", "OBS", "音乐"]
-not_music_mode = {"原始": True, "代码": True, "常规": True, "P S": True, "L2D": True, "OBS": True, "音乐": False}
 with open(f"BTkeyboard/config.json", "r") as f:
-    mode_num = json.load(f)["mode_num"]
+    mode_index = json.load(f)["mode_index"]
 with open(f"BTkeyboard/config.json", "r") as f:
     lock_mode = json.load(f)["lock_mode"]
 with open(f"BTkeyboard/config.json", "r") as f:
     os_name = json.load(f)["os_name"]
-with open(f"BTkeyboard/mode_keyboard_data/{keyboard_mode_list[mode_num]}.json", "r") as f:
+with open(f"BTkeyboard/mode_list.json", "r") as f:
+    mode_list = json.load(f)["data"]
+    mode_num = len(mode_list)
+    mode_name = mode_list[mode_index]
+with open(f"BTkeyboard/mode_music_is/{mode_name}.json", "r") as f:
+    mode_music_is = json.load(f)["data"]
+with open(f"BTkeyboard/mode_keyboard_data/{mode_name}.json", "r") as f:
     _keys = json.load(f)["data"]
-with open(f"BTkeyboard/mode_knob_Rotate_data/{keyboard_mode_list[mode_num]}.json", "r") as f:
+with open(f"BTkeyboard/mode_knob_Rotate_data/{mode_name}.json", "r") as f:
     _knobs = json.load(f)["data"]
 with open(f"BTkeyboard/buzzer_data/{musical_scale}.json", "r") as f:
     tone_dict = json.load(f)
@@ -108,8 +112,8 @@ def ssd_type_matrix_text(font_data: dict, x: int, y: int, show: bool = False, cl
 
 # 初始化屏幕
 # 显示标题
-uFont.text(display=ssd, string=keyboard_mode_list[mode_num], x=0, y=32, font_size=32, show=True, half_char=True)
-with open(f"BTkeyboard/mode_type_matrix/{keyboard_mode_list[mode_num]}.json", "r") as f:
+uFont.text(display=ssd, string=mode_name, x=0, y=32, font_size=32, show=True, half_char=True)
+with open(f"BTkeyboard/mode_type_matrix/{mode_name}.json", "r") as f:
     ssd_type_matrix_text(json.load(f), x=64, y=0, show=True, fill=True)
 # 显示锁定模式
 if lock_mode:
@@ -126,7 +130,7 @@ ssd.show()
 pilot_lamp.value(0)
 
 # 初始化蜂鸣器
-if not not_music_mode[keyboard_mode_list[mode_num]]:
+if mode_music_is:
     Buzzer.duty(0)
     Buzzer.freq(40000000)
 else:
@@ -231,9 +235,9 @@ while True:
         if left_click_keep_time:
             print(f"左键抬起,{left_click_keep_time}")
             if right_click_keep_time < 100:
-                mode_num = (mode_num - 1) % len(keyboard_mode_list)
+                mode_index = (mode_index - 1) % mode_num
                 # 初始化蜂鸣器
-                if not not_music_mode[keyboard_mode_list[mode_num]]:
+                if mode_music_is:
                     # 创建蜂鸣器对象
                     Buzzer = PWM(Pin(32, Pin.OUT), freq=40000000, duty=0)
                 else:
@@ -241,25 +245,25 @@ while True:
                     pwm_pin.value(0)
                 with open(f"BTkeyboard/config.json", "r") as f:
                     config = json.load(f)
-                    config["mode_num"] = mode_num
+                    config["mode_index"] = mode_index
                 with open(f"BTkeyboard/config.json", "w") as f:
                     print(config)
                     f.write(json.dumps(config))
                 del config
-                with open(f"BTkeyboard/mode_keyboard_data/{keyboard_mode_list[mode_num]}.json", "r") as f:
+                with open(f"BTkeyboard/mode_keyboard_data/{mode_name}.json", "r") as f:
                     _keys = json.load(f)["data"]
-                with open(f"BTkeyboard/mode_knob_Rotate_data/{keyboard_mode_list[mode_num]}.json", "r") as f:
+                with open(f"BTkeyboard/mode_knob_Rotate_data/{mode_name}.json", "r") as f:
                     _knobs = json.load(f)["data"]
-                uFont.text(display=ssd, string=keyboard_mode_list[mode_num], x=0, y=32, font_size=32,
+                uFont.text(display=ssd, string=mode_name, x=0, y=32, font_size=32,
                            show=True, half_char=True)
-                with open(f"BTkeyboard/mode_type_matrix/{keyboard_mode_list[mode_num]}.json", "r") as f:
+                with open(f"BTkeyboard/mode_type_matrix/{mode_name}.json", "r") as f:
                     ssd_type_matrix_text(json.load(f), x=64, y=0, show=True, fill=True)
         if right_click_keep_time:
             print(f"右键抬起,{right_click_keep_time}")
             if right_click_keep_time < 100:
-                mode_num = (mode_num + 1) % len(keyboard_mode_list)
+                mode_index = (mode_index + 1) % mode_num
                 # 初始化蜂鸣器
-                if not not_music_mode[keyboard_mode_list[mode_num]]:
+                if mode_music_is:
                     # 创建蜂鸣器对象
                     Buzzer = PWM(Pin(32, Pin.OUT), freq=40000000, duty=0)
                 else:
@@ -267,18 +271,18 @@ while True:
                     pwm_pin.value(0)
                 with open(f"BTkeyboard/config.json", "r") as f:
                     config = json.load(f)
-                    config["mode_num"] = mode_num
+                    config["mode_index"] = mode_index
                 with open(f"BTkeyboardconfig.json", "w") as f:
                     print(config)
                     f.write(json.dumps(config))
                 del config
-                with open(f"BTkeyboard/mode_keyboard_data/{keyboard_mode_list[mode_num]}.json", "r") as f:
+                with open(f"BTkeyboard/mode_keyboard_data/{mode_name}.json", "r") as f:
                     _keys = json.load(f)["data"]
-                with open(f"BTkeyboard/mode_knob_Rotate_data/{keyboard_mode_list[mode_num]}.json", "r") as f:
+                with open(f"BTkeyboard/mode_knob_Rotate_data/{mode_name}.json", "r") as f:
                     _knobs = json.load(f)["data"]
-                uFont.text(display=ssd, string=keyboard_mode_list[mode_num], x=0, y=32, font_size=32,
+                uFont.text(display=ssd, string=mode_name, x=0, y=32, font_size=32,
                            show=True, half_char=True)
-                with open(f"BTkeyboard/mode_type_matrix/{keyboard_mode_list[mode_num]}.json", "r") as f:
+                with open(f"BTkeyboard/mode_type_matrix/{mode_name}.json", "r") as f:
                     ssd_type_matrix_text(json.load(f), x=64, y=0, show=True, fill=True)
         double_click_keep_time = 0
         left_click_keep_time = 0
@@ -334,7 +338,7 @@ while True:
                         col_pin.value(1)
                         line_col = j, i  # 记录当前按键的行列号
                 col_pin.value(1)  # 将当前列恢复为高电平
-            if not_music_mode[keyboard_mode_list[mode_num]]:
+            if not mode_music_is:
                 if line_col is not None:
                     print(line_col)  # 返回按下的按键
                     once_click = _keys[line_col[0]][line_col[1]]

@@ -46,7 +46,7 @@ lp = {0: (0, 0), 1: (0, 0), 2: (0, 0), 3: (0, 0)}
 keyboard_mode_order = ["原始", "代码", "常规", "P S", "L2D", "OBS", "音乐"]
 keyboard_mode = {"原始": True, "代码": True, "常规": True, "P S": True, "L2D": True, "OBS": True, "音乐": False}
 with open(f"BTkeyboard/config.json", "r") as f:
-    display_mode = json.load(f)["mode_num"]
+    display_mode = json.load(f)["mode_index"]
 with open(f"BTkeyboard/config.json", "r") as f:
     lock_mode = json.load(f)["lock_mode"]
 with open(f"BTkeyboard/config.json", "r") as f:
@@ -261,7 +261,7 @@ while True:
                     display_mode = (display_mode - 1) % len(keyboard_mode_order)
                     with open(f"BTkeyboard/config.json", "r") as f:
                         config = json.load(f)
-                        config["mode_num"] = display_mode
+                        config["mode_index"] = display_mode
                     with open(f"BTkeyboard/config.json", "w") as f:
                         print(config)
                         f.write(json.dumps(config))
@@ -280,7 +280,7 @@ while True:
                     display_mode = (display_mode + 1) % len(keyboard_mode_order)
                     with open(f"BTkeyboard/config.json", "r") as f:
                         config = json.load(f)
-                        config["mode_num"] = display_mode
+                        config["mode_index"] = display_mode
                     with open(f"BTkeyboardconfig.json", "w") as f:
                         print(config)
                         f.write(json.dumps(config))
