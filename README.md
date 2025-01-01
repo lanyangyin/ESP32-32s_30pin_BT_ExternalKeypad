@@ -31,6 +31,14 @@ MicroPython v1.24.1或以上，使用[官方固件](https://micropython.org/down
 7. 按键防误触
 8. mac和win使用切换
 
+## 使用方法
+1. 下载MicroPython固件，烧录到esp32模组
+2. 下载本项目代码，上传到esp32模组
+3. 连接蓝牙键盘，查看打印信息
+4. ……
+
 ## 引用
 - 蓝牙
-  - [MicroPythonBLEHID](https://github.com/Heerkog/MicroPythonBLEHID)
+  - [MicroPythonBLEHID](https://github.com/Heerkog/MicroPythonBLEHID)，作者：[Heerkog](https://github.com/Heerkog)
+- ssd1306 oled 中文显示
+  - [MicroPython-uFont](https://github.com/AntonVanke/MicroPython-uFont)，作者：[AntonVanke](https://github.com/AntonVanke)
