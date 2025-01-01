@@ -113,7 +113,7 @@ def OutputHidIncident(bt, once_click, os_name):
             bt.keyboard.set_keys(0x11)
         else:
             bt.keyboard.set_modifiers(left_gui=True)
-            bt.keyboard.set_keys(0x10)
+            bt.keyboard.set_keys(0x0B)
     elif once_click == "跳转助记标签":
         print("跳转助记标签")
         if os_name:
