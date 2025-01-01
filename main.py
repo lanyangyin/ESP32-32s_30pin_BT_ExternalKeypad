@@ -25,7 +25,8 @@ from lib.hid_services import Keyboard
 from lib.ssd1306 import SSD1306_I2C
 
 # 创建蜂鸣器对象
-Buzzer = PWM(Pin(32, Pin.OUT), freq=40000000, duty=0)
+pwm_pin = Pin(32, Pin.OUT)
+Buzzer = PWM(pwm_pin, freq=40000000, duty=0)
 # 创建指示灯对象
 pilot_lamp = Pin(33, Pin.OUT)
 # 创建蓝牙对象
@@ -129,6 +130,7 @@ if not not_music_mode[keyboard_mode_list[mode_num]]:
     Buzzer.freq(40000000)
 else:
     Buzzer.deinit()
+    pwm_pin.value(0)
 
 while True:
     # 蓝牙连接
@@ -268,6 +270,7 @@ while True:
                         Buzzer = PWM(Pin(32, Pin.OUT), freq=40000000, duty=0)
                     else:
                         Buzzer.deinit()
+                        pwm_pin.value(0)
                     with open(f"BTkeyboard/config.json", "r") as f:
                         config = json.load(f)
                         config["mode_num"] = mode_num
@@ -293,10 +296,11 @@ while True:
                         Buzzer = PWM(Pin(32, Pin.OUT), freq=40000000, duty=0)
                     else:
                         Buzzer.deinit()
+                        pwm_pin.value(0)
                     with open(f"BTkeyboard/config.json", "r") as f:
                         config = json.load(f)
                         config["mode_num"] = mode_num
-                    with open(f"BTkeyboardconfig.json", "w") as f:
+                    with open(f"BTkeyboard/config.json", "w") as f:
                         print(config)
                         f.write(json.dumps(config))
                     del config
