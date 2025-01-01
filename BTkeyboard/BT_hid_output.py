@@ -1,4 +1,3 @@
-
 def OutputHidIncident(bt, once_click, os_name):
     if once_click == "新建文件夹":
         print("创建文件夹")
@@ -161,9 +160,9 @@ def OutputHidIncident(bt, once_click, os_name):
     elif once_click == "优化代码":
         print("优化代码")
         if os_name:
-            bt.keyboard.set_modifiers(left_gui=True, left_alt=True)
-        else:
             bt.keyboard.set_modifiers(left_control=True, left_alt=True)
+        else:
+            bt.keyboard.set_modifiers(left_gui=True, left_alt=True)
         bt.keyboard.set_keys(0x0F)
     elif once_click == "优化import":
         print("优化import")
@@ -177,10 +176,29 @@ def OutputHidIncident(bt, once_click, os_name):
         print("连接行")
         bt.keyboard.set_modifiers(left_alt=True, left_shift=True)
         bt.keyboard.set_keys(0x0D)
+    elif once_click == "ps画笔直径减":
+        print("ps画笔直径减")
+        bt.keyboard.set_keys(0x2F)
+    elif once_click == "ps画笔直径加":
+        print("ps画笔直径加")
+        bt.keyboard.set_keys(0x30)
+    elif once_click == "ps缩放减":
+        print("ps缩放减")
+        if os_name:
+            bt.keyboard.set_modifiers(left_control=True)
+        else:
+            bt.keyboard.set_modifiers(left_gui=True)
+        bt.keyboard.set_keys(0x2D)
+    elif once_click == "ps缩放加":
+        print("ps缩放加")
+        if os_name:
+            bt.keyboard.set_modifiers(left_control=True, left_shift=True)
+        else:
+            bt.keyboard.set_modifiers(left_gui=True, left_shift=True)
+        bt.keyboard.set_keys(0x2E)
     else:
         bt.keyboard.set_keys(once_click)
     bt.keyboard.notify_hid_report()
     bt.keyboard.set_modifiers()
     bt.keyboard.set_keys()
     bt.keyboard.notify_hid_report()
-
