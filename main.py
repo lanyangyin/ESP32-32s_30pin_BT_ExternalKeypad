@@ -18,8 +18,9 @@ import math
 import time
 
 from machine import Pin, I2C, PWM
-from BTkeyboard.bluetooth import Device as BluetoothDevice
+
 from BTkeyboard.BT_hid_output import OutputHidIncident
+from BTkeyboard.bluetooth import Device as BluetoothDevice
 from lib import ufont
 from lib.hid_services import Keyboard
 from lib.ssd1306 import SSD1306_I2C
@@ -300,7 +301,7 @@ while True:
                     with open(f"BTkeyboard/config.json", "r") as f:
                         config = json.load(f)
                         config["mode_num"] = mode_num
-                    with open(f"BTkeyboard/config.json", "w") as f:
+                    with open(f"BTkeyboardconfig.json", "w") as f:
                         print(config)
                         f.write(json.dumps(config))
                     del config
