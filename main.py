@@ -322,7 +322,7 @@ while True:
             else:
                 if line_col is not None:
                     Buzzer.duty(900)
-                    Buzzer.freq(tone_dict[_keys[line_col[0]][line_col[1]]])
+                    Buzzer.freq(int(tone_dict[_keys[line_col[0]][line_col[1]]]))
                 else:
                     Buzzer.duty(0)
                     Buzzer.freq(40000000)
