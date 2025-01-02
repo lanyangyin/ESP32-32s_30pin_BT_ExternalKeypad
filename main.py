@@ -92,9 +92,7 @@ class KnobDevice:
         初始化旋钮对象
         :param Knob_pin_id_list: [左旋扭左侧,左旋扭右侧,右旋扭左侧,右旋扭右侧，左旋扭按下，右旋扭按下]
         """
-        self.Knob_pin_list = []
-        for pin_id_index, pin_id in enumerate(Knob_pin_id_list):
-            self.Knob_pin_list[pin_id_index] = Pin(pin_id, Pin.IN, Pin.PULL_DOWN)
+        self.Knob_pin_list = [Pin(pin_id, Pin.IN, Pin.PULL_DOWN) for pin_id in Knob_pin_id_list]
         self.double_click_keep_time = 0
         self.left_click_keep_time = 0
         self.right_click_keep_time = 0
@@ -182,7 +180,6 @@ class KnobDevice:
                 if self.double_click_keep_time < 100:
                     print(f"双键单击,{self.double_click_keep_time}")
                     self.click_state = 3
-            self.click_state = 0
             self.double_click_keep_time = 0
             self.left_click_keep_time = 0
             self.right_click_keep_time = 0
@@ -359,16 +356,16 @@ def bt_connect():
 _thread.start_new_thread(bt_connect, ())  # 启动线程，连接蓝牙
 
 
-def knob_rotate():
-    """
-    旋钮旋转
-    :return:
-    """
-    while True:
-        Knob.rotate()
-
-
-_thread.start_new_thread(knob_rotate, ())  # 启动线程，旋钮旋转
+# def knob_rotate():
+#     """
+#     旋钮旋转
+#     :return:
+#     """
+#     while True:
+#         Knob.rotate()
+#
+#
+# _thread.start_new_thread(knob_rotate, ())  # 启动线程，旋钮旋转
 
 
 def knob_click():
@@ -385,6 +382,7 @@ _thread.start_new_thread(knob_click, ())  # 启动线程，旋钮点击
 while True:
     # 蓝牙连接
     if bt.active() is Keyboard.DEVICE_CONNECTED:
+        Knob.rotate()
         # 读取旋钮按下状态
         if Knob.click_state == 22:
             if bt.active() is Keyboard.DEVICE_CONNECTED:
@@ -392,6 +390,7 @@ while True:
                 bt.keyboard.notify_hid_report()
                 bt.keyboard.set_keys()
                 bt.keyboard.notify_hid_report()
+            Knob.click_state = 0
 
         if Knob.click_state == 33:
             lock_mode = not lock_mode
@@ -409,6 +408,7 @@ while True:
                 print(config)
                 f.write(json.dumps(config))
             del config
+            Knob.click_state = 0
 
         if Knob.click_state == 1:
             mode_num = (mode_num - 1) % len(keyboard_mode_list)
@@ -434,6 +434,7 @@ while True:
                        show=True, half_char=True)
             with open(f"BTkeyboard/mode_type_matrix/{keyboard_mode_list[mode_num]}.json", "r") as f:
                 ssd_type_matrix_text(json.load(f), x=64, y=0, show=True, fill=True)
+            Knob.click_state = 0
 
         if Knob.click_state == 2:
             mode_num = (mode_num + 1) % len(keyboard_mode_list)
@@ -447,7 +448,7 @@ while True:
             with open(f"BTkeyboard/config.json", "r") as f:
                 config = json.load(f)
                 config["mode_num"] = mode_num
-            with open(f"BTkeyboardconfig.json", "w") as f:
+            with open(f"BTkeyboard/config.json", "w") as f:
                 print(config)
                 f.write(json.dumps(config))
             del config
@@ -459,6 +460,7 @@ while True:
                        show=True, half_char=True)
             with open(f"BTkeyboard/mode_type_matrix/{keyboard_mode_list[mode_num]}.json", "r") as f:
                 ssd_type_matrix_text(json.load(f), x=64, y=0, show=True, fill=True)
+            Knob.click_state = 0
 
         if Knob.click_state == 3:
             os_name = not os_name
@@ -472,6 +474,7 @@ while True:
             del config
             uFont.text(display=ssd, string={True: "O", False: "A"}[os_name], x=32, y=0, font_size=32)
             ssd.show()
+            Knob.click_state = 0
 
         # 旋钮状态
         if Knob.rotate_state[1] == 1:
