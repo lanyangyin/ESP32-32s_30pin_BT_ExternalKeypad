@@ -76,7 +76,16 @@ MicroPython v1.24.1或以上，使用[官方固件](https://micropython.org/down
    1. 打开[main.py](main.py)
       - 找到`keyboard_mode_list`变量，这应该是一个列表，里面包含了所有可用的模式。
         - 将列表中要删除的模式名称删除即可。
-
+        - 注意⚠️：请确保该名称在[mode_keyboard_data](BTkeyboard%2Fmode_keyboard_data)、
+        [mode_knob_Rotate_data](BTkeyboard%2Fmode_knob_Rotate_data)、
+        [mode_type_matrix](BTkeyboard%2Fmode_type_matrix)中均有正确定义文件，并且在`not_music_mode`变量中也有正确的定义。
+3. 更换模式切换顺序
+   1. 打开[main.py](main.py)
+      - 找到`keyboard_mode_list`变量，这应该是一个列表，里面包含了所有可用的模式。
+        - 将列表中的模式名称顺序调整即可。
+        - 注意⚠️：请确保该名称在[mode_keyboard_data](BTkeyboard%2Fmode_keyboard_data)、
+        [mode_knob_Rotate_data](BTkeyboard%2Fmode_knob_Rotate_data)、
+        [mode_type_matrix](BTkeyboard%2Fmode_type_matrix)中均有正确定义文件，并且在`not_music_mode`变量中也有正确的定义。
 ### 按键定义
 1. 每个模式对应的按键定义在[mode_keyboard_data](BTkeyboard%2Fmode_keyboard_data)中，按键定义格式如下：
    ```json
