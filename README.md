@@ -38,6 +38,9 @@ MicroPython v1.24.1或以上，使用[官方固件](https://micropython.org/down
 3. 下载并安装[thonny](https://thonny.org/)，使用它将MicroPython固件烧录到esp32模组中
 4. 下载本项目代码，通过thonny将代码上传到esp32模组中
 5. 上传完成后，重新插拔电源
+6. 长按两个旋钮是锁定模式，短按两个旋钮是切换windows和mac模式，键盘按键按下后根据模式输出。
+7. 锁定模式下只有键盘按键被禁用，其他动作正常生效
+8. 蓝牙未连接时，指示灯会熄灭，且不可操作，连接后指示灯会亮，可正常操作。
 
 ## 自定义方法
 ### 键盘模式定义
@@ -102,3 +105,7 @@ MicroPython v1.24.1或以上，使用[官方固件](https://micropython.org/down
   - [MicroPythonBLEHID](https://github.com/Heerkog/MicroPythonBLEHID)，作者：[Heerkog](https://github.com/Heerkog)
 - ssd1306 oled 中文显示
   - [MicroPython-uFont](https://github.com/AntonVanke/MicroPython-uFont)，作者：[AntonVanke](https://github.com/AntonVanke)
+- 字模
+  - [字模生成工具](https://www.zhetao.com/fontarray.html)
+- hid键码
+  - [usb_hid_usages](https://www.freebsddiary.org/APC/usb_hid_usages)
