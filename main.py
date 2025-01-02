@@ -356,18 +356,6 @@ def bt_connect():
 _thread.start_new_thread(bt_connect, ())  # 启动线程，连接蓝牙
 
 
-# def knob_rotate():
-#     """
-#     旋钮旋转
-#     :return:
-#     """
-#     while True:
-#         Knob.rotate()
-#
-#
-# _thread.start_new_thread(knob_rotate, ())  # 启动线程，旋钮旋转
-
-
 def knob_click():
     """
     旋钮点击
