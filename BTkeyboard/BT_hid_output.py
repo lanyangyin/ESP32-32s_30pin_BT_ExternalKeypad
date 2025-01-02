@@ -1,6 +1,6 @@
 def OutputHidIncident(bt, once_click, os_name):
     if once_click == "新建文件夹":
-        print("创建文件夹")
+        print("新建文件夹")
         if os_name:
             bt.keyboard.set_modifiers(left_control=True, left_shift=True)
         else:
