@@ -33,7 +33,7 @@ MicroPython v1.24.1或以上，使用[官方固件](https://micropython.org/down
 
 ## 简单使用方法
 1. 按照接线图连接esp32模组和ssd1306 oled显示屏等其他元件
-   - ![接线图](wiring_diagram.svg)
+   - ![wiring_diagram.svg](wiring_diagram.svg)
 2. 前往[官网](https://micropython.org/download/ESP32_GENERIC/)下载MicroPython固件
 3. 下载并安装[thonny](https://thonny.org/)，使用它将MicroPython固件烧录到esp32模组中
 4. 下载本项目代码，通过thonny将代码上传到esp32模组中
