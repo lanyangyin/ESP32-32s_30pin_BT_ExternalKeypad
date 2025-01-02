@@ -50,7 +50,7 @@ with open(f"BTkeyboard/config.json", "r") as f:
 with open(f"BTkeyboard/config.json", "r") as f:
     lock_mode = json.load(f)["lock_mode"]
 with open(f"BTkeyboard/config.json", "r") as f:
-    os_name = json.load(f)["os_name"]
+    os_name = json.load(f)["win_os_is"]
 with open(f"BTkeyboard/mode_keyboard_data/{keyboard_mode_order[display_mode]}.json", "r") as f:
     _keys = json.load(f)["data"]
 with open(f"BTkeyboard/mode_knob_Rotate_data/{keyboard_mode_order[display_mode]}.json", "r") as f:
@@ -248,7 +248,7 @@ while True:
                     # 切换系统时，记录进BTkeyboard/config.json的“设备系统”参数中
                     with open(f"BTkeyboard/config.json", "r") as f:
                         config = json.load(f)
-                        config["os_name"] = os_name
+                        config["win_os_is"] = os_name
                     with open(f"BTkeyboard/config.json", "w") as f:
                         print(config)
                         f.write(json.dumps(config))
