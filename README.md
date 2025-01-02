@@ -23,19 +23,20 @@ MicroPython v1.24.1或以上，使用[官方固件](https://micropython.org/down
 
 ## 功能
 1.蓝牙hid通信
-2. 蓝牙数字小键盘
-3. 亮度、音量调整
-4. 快捷键定义
-5. 按键宏定义
-6. 音乐小键盘
-7. 按键防误触
-8. mac和win使用切换
+1. 蓝牙数字小键盘
+2. 亮度、音量调整
+3. 快捷键定义
+4. 按键宏定义
+5. 音乐小键盘
+6. 按键防误触
+7. mac和win使用切换
 
-## 使用方法
-1. 下载MicroPython固件，烧录到esp32模组
-2. 下载本项目代码，上传到esp32模组
-3. 连接蓝牙键盘，查看打印信息
-4. ……
+## 配置方法
+1. 按照接线图连接esp32模组和ssd1306 oled显示屏等其他元件
+   - ![接线图.svg](wiring_diagram.svg)
+2. 前往[官网](https://micropython.org/download/ESP32_GENERIC/)下载MicroPython固件
+3. 下载并安装[thonny](https://thonny.org/)，使用它将MicroPython固件烧录到esp32模组中
+4. 下载本项目代码，通过thonny将代码上传到esp32模组中
 
 ## 引用
 - 蓝牙
