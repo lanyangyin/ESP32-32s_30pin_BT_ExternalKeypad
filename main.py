@@ -139,7 +139,7 @@ while True:
         pilot_lamp.value(1)
         # 读取旋钮按下状态
         knob_click = Pin(25, Pin.IN, Pin.PULL_DOWN).value(), Pin(26, Pin.IN, Pin.PULL_DOWN).value()
-        if knob_click == (1, 1):
+        if knob_click == (0, 0):
             left_click_keep_time = 0
             right_click_keep_time = 0
             left_click_ready_time = 0
@@ -165,7 +165,7 @@ while True:
                     f.write(json.dumps(config))
                 del config
             time.sleep_ms(1)
-        if knob_click == (1, 0):
+        if knob_click == (0, 1):
             # 防止双键按下抬起时左键的误触发，
             # 双键按下后抬起右键后，这时左键的按下时间为预备时间，
             # 预备时间时双键按下时间不会清空，依然视为双键按下
@@ -188,7 +188,7 @@ while True:
                 if left_click_keep_time == 140:
                     print(f"左键按下超过{left_click_keep_time}秒")
             time.sleep_ms(1)
-        if knob_click == (0, 1):
+        if knob_click == (1, 0):
             # 防止双键按下抬起时右键的误触发，
             # 双键按下后抬起左键后，这时右键的按下时间为预备时间，
             # 预备时间时双键按下时间不会清空，依然视为双键按下
@@ -216,7 +216,7 @@ while True:
                         bt.keyboard.set_keys()
                         bt.keyboard.notify_hid_report()
             time.sleep_ms(1)
-        if knob_click == (0, 0):
+        if knob_click == (1, 1):
             if double_click_keep_time:
                 print(f"双键抬起,{double_click_keep_time}")
                 if double_click_keep_time < 100:
@@ -297,12 +297,12 @@ while True:
             rp[1] = rp[2]
             rp[2] = rp[3]
             rp[3] = rnt
-        if rp == {0: (0, 0), 1: (0, 1), 2: (1, 1), 3: (1, 0)}:  # 顺时针
-            rp = {0: (0, 0), 1: (0, 0), 2: (0, 0), 3: (0, 0)}
+        if rp == {0: (1, 1), 1: (1, 0), 2: (0, 0), 3: (0, 1)}:  # 顺时针
+            rp = {0: (1, 1), 1: (1, 1), 2: (1, 1), 3: (1, 1)}
             # 音量+
             OutputHidIncident(bt, _knobs[3], os_name)
-        elif rp == {0: (0, 0), 1: (1, 0), 2: (1, 1), 3: (0, 1)}:  # 逆时针
-            rp = {0: (0, 0), 1: (0, 0), 2: (0, 0), 3: (0, 0)}
+        elif rp == {0: (1, 1), 1: (0, 1), 2: (0, 0), 3: (1, 0)}:  # 逆时针
+            rp = {0: (1, 1), 1: (1, 1), 2: (1, 1), 3: (1, 1)}
             # 音量-
             OutputHidIncident(bt, _knobs[2], os_name)
         if lnt != lp[3]:
@@ -310,12 +310,12 @@ while True:
             lp[1] = lp[2]
             lp[2] = lp[3]
             lp[3] = lnt
-        if lp == {0: (0, 0), 1: (0, 1), 2: (1, 1), 3: (1, 0)}:  # 顺时针
-            lp = {0: (0, 0), 1: (0, 0), 2: (0, 0), 3: (0, 0)}
+        if lp == {0: (1, 1), 1: (1, 0), 2: (0, 0), 3: (0, 1)}:  # 顺时针
+            lp = {0: (1, 1), 1: (1, 1), 2: (1, 1), 3: (1, 1)}
             # 亮度+
             OutputHidIncident(bt, _knobs[1], os_name)
-        elif lp == {0: (0, 0), 1: (1, 0), 2: (1, 1), 3: (0, 1)}:  # 逆时针
-            lp = {0: (0, 0), 1: (0, 0), 2: (0, 0), 3: (0, 0)}
+        elif lp == {0: (1, 1), 1: (0, 1), 2: (0, 0), 3: (1, 0)}:  # 逆时针
+            lp = {0: (1, 1), 1: (1, 1), 2: (1, 1), 3: (1, 1)}
             # 亮度-
             OutputHidIncident(bt, _knobs[0], os_name)
         del rnt, lnt
