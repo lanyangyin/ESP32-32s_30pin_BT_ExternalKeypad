@@ -165,6 +165,17 @@ def bt_run():
 # 创建线程
 _thread.start_new_thread(bt_run, ())
 
+def knob_click_handler(pin_left, pin_right):
+    """
+    旋钮点击事件处理函数
+    :param pin_left: 左旋钮引脚
+    :param pin_right: 右旋钮引脚
+    :return:
+    """
+    global left_click_keep_time, right_click_keep_time, left_click_ready_time, right_click_ready_time, double_click_keep_time, \
+        network_is, musical_scale
+    pass
+
 while True:
     # 读取旋钮按下状态
     knob_click = Pin(25, Pin.IN, Pin.PULL_DOWN).value(), Pin(26, Pin.IN, Pin.PULL_DOWN).value()
@@ -404,8 +415,7 @@ while True:
     # 键盘事件
     if not network_is:
         if bt.keyboard.get_state() is Keyboard.DEVICE_CONNECTED:
-            # 飞行灯
-            pilot_lamp.value(1)
+            pilot_lamp.value(1)  # 飞行灯
         if not lock_mode:
             if bt.keyboard.get_state() is Keyboard.DEVICE_CONNECTED:  # 设备连接蓝牙才响应键盘事件
                 # 旋钮状态
