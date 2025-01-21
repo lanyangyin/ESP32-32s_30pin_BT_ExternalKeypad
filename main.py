@@ -165,6 +165,7 @@ def bt_run():
 # 创建线程
 _thread.start_new_thread(bt_run, ())
 
+
 def knob_click_handler(pin_left, pin_right):
     """
     旋钮点击事件处理函数
@@ -173,12 +174,8 @@ def knob_click_handler(pin_left, pin_right):
     :return:
     """
     global left_click_keep_time, right_click_keep_time, left_click_ready_time, right_click_ready_time, double_click_keep_time, \
-        network_is, musical_scale
-    pass
-
-while True:
-    # 读取旋钮按下状态
-    knob_click = Pin(25, Pin.IN, Pin.PULL_DOWN).value(), Pin(26, Pin.IN, Pin.PULL_DOWN).value()
+        network_is, musical_scale, lock_mode, mode_name, win_os_is, _knobs, mode_index, Buzzer
+    knob_click = pin_left.value(), pin_right.value()
     if knob_click == (1, 1):
         left_click_keep_time = 0
         right_click_keep_time = 0
@@ -411,6 +408,51 @@ while True:
         right_click_keep_time = 0
         left_click_ready_time = 0
         right_click_ready_time = 0
+    pass
+
+
+def knob_revolve_handler(pin_tuples_left, pin_tuples_right):
+    """
+    旋钮旋转事件处理函数
+    :param pin_tuples_left:
+    :param pin_tuples_right:
+    :return:
+    """
+    global rp, lp, _knobs, win_os_is
+    lnt = pin_tuples_left[0].value(), pin_tuples_left[1].value()
+    rnt = pin_tuples_right[0].value(), pin_tuples_right[1].value()
+    if lnt != lp[3]:
+        lp[0] = lp[1]
+        lp[1] = lp[2]
+        lp[2] = lp[3]
+        lp[3] = lnt
+    if lp == {0: (0, 0), 1: (1, 0), 2: (1, 1), 3: (0, 1)}:  # 逆时针
+        lp = {0: (0, 0), 1: (0, 0), 2: (0, 0), 3: (0, 0)}
+        # 亮度-
+        OutputHidIncident(bt, _knobs[0], win_os_is)
+    elif lp == {0: (0, 0), 1: (0, 1), 2: (1, 1), 3: (1, 0)}:  # 顺时针
+        lp = {0: (0, 0), 1: (0, 0), 2: (0, 0), 3: (0, 0)}
+        # 亮度+
+        OutputHidIncident(bt, _knobs[1], win_os_is)
+    if rnt != rp[3]:
+        rp[0] = rp[1]
+        rp[1] = rp[2]
+        rp[2] = rp[3]
+        rp[3] = rnt
+    if rp == {0: (0, 0), 1: (1, 0), 2: (1, 1), 3: (0, 1)}:  # 逆时针
+        rp = {0: (0, 0), 1: (0, 0), 2: (0, 0), 3: (0, 0)}
+        # 音量-
+        OutputHidIncident(bt, _knobs[2], win_os_is)
+    elif rp == {0: (0, 0), 1: (0, 1), 2: (1, 1), 3: (1, 0)}:  # 顺时针
+        rp = {0: (0, 0), 1: (0, 0), 2: (0, 0), 3: (0, 0)}
+        # 音量+
+        OutputHidIncident(bt, _knobs[3], win_os_is)
+    del rnt, lnt
+
+
+while True:
+    # 读取旋钮按下状态
+    knob_click_handler(Pin(25, Pin.IN, Pin.PULL_DOWN), Pin(26, Pin.IN, Pin.PULL_DOWN))
 
     # 键盘事件
     if not network_is:
@@ -419,35 +461,8 @@ while True:
         if not lock_mode:
             if bt.keyboard.get_state() is Keyboard.DEVICE_CONNECTED:  # 设备连接蓝牙才响应键盘事件
                 # 旋钮状态
-                rnt = Pin(13, Pin.IN, Pin.PULL_DOWN).value(), Pin(12, Pin.IN, Pin.PULL_DOWN).value()
-                lnt = Pin(14, Pin.IN, Pin.PULL_DOWN).value(), Pin(27, Pin.IN, Pin.PULL_DOWN).value()
-                if rnt != rp[3]:
-                    rp[0] = rp[1]
-                    rp[1] = rp[2]
-                    rp[2] = rp[3]
-                    rp[3] = rnt
-                if rp == {0: (0, 0), 1: (0, 1), 2: (1, 1), 3: (1, 0)}:  # 顺时针
-                    rp = {0: (0, 0), 1: (0, 0), 2: (0, 0), 3: (0, 0)}
-                    # 音量+
-                    OutputHidIncident(bt, _knobs[3], win_os_is)
-                elif rp == {0: (0, 0), 1: (1, 0), 2: (1, 1), 3: (0, 1)}:  # 逆时针
-                    rp = {0: (0, 0), 1: (0, 0), 2: (0, 0), 3: (0, 0)}
-                    # 音量-
-                    OutputHidIncident(bt, _knobs[2], win_os_is)
-                if lnt != lp[3]:
-                    lp[0] = lp[1]
-                    lp[1] = lp[2]
-                    lp[2] = lp[3]
-                    lp[3] = lnt
-                if lp == {0: (0, 0), 1: (0, 1), 2: (1, 1), 3: (1, 0)}:  # 顺时针
-                    lp = {0: (0, 0), 1: (0, 0), 2: (0, 0), 3: (0, 0)}
-                    # 亮度+
-                    OutputHidIncident(bt, _knobs[1], win_os_is)
-                elif lp == {0: (0, 0), 1: (1, 0), 2: (1, 1), 3: (0, 1)}:  # 逆时针
-                    lp = {0: (0, 0), 1: (0, 0), 2: (0, 0), 3: (0, 0)}
-                    # 亮度-
-                    OutputHidIncident(bt, _knobs[0], win_os_is)
-                del rnt, lnt
+                knob_revolve_handler((Pin(14, Pin.IN, Pin.PULL_DOWN), Pin(27, Pin.IN, Pin.PULL_DOWN)),
+                                     (Pin(13, Pin.IN, Pin.PULL_DOWN), Pin(12, Pin.IN, Pin.PULL_DOWN)))
 
             if bt.keyboard.get_state() is Keyboard.DEVICE_CONNECTED or mode_music_is:
                 # 键盘事件
