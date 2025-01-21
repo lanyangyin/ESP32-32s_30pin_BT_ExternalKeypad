@@ -450,6 +450,39 @@ def knob_revolve_handler(pin_tuples_left, pin_tuples_right):
     del rnt, lnt
 
 
+def keyboard_handler(pin_list_row, pin_list_col):
+    """
+    键盘事件处理函数
+    :param pin_list_row:
+    :param pin_list_col:
+    :return:
+    """
+    global _keys, win_os_is
+    line_col = None
+    for j, col_pin in enumerate(pin_list_row):
+        col_pin.value(0)  # 将当前列设置为低电平
+        for i, row_pin in enumerate(pin_list_col):
+            if row_pin.value() == 0:  # 检测行引脚的状态
+                # 将当前列恢复为高电平
+                col_pin.value(1)
+                line_col = j, i  # 记录当前按键的行列号
+        col_pin.value(1)  # 将当前列恢复为高电平
+    if not mode_music_is:
+        if line_col is not None and bt.keyboard.get_state() is Keyboard.DEVICE_CONNECTED:
+            print(line_col)  # 返回按下的按键
+            OutputHidIncident(bt, _keys[line_col[0]][line_col[1]], win_os_is)
+            time.sleep_ms(170)
+    else:
+        if line_col is not None:
+            if int(tone_dict[str(_keys[line_col[0]][line_col[1]])]) > 0:
+                Buzzer.duty(900)
+                Buzzer.freq(int(tone_dict[str(_keys[line_col[0]][line_col[1]])]))
+        else:
+            Buzzer.duty(0)
+            Buzzer.freq(40000000)
+        pass
+
+
 while True:
     # 读取旋钮按下状态
     knob_click_handler(Pin(25, Pin.IN, Pin.PULL_DOWN), Pin(26, Pin.IN, Pin.PULL_DOWN))
@@ -457,7 +490,8 @@ while True:
     # 键盘事件
     if not network_is:
         if bt.keyboard.get_state() is Keyboard.DEVICE_CONNECTED:
-            pilot_lamp.value(1)  # 飞行灯
+            # 指示灯
+            pilot_lamp.value(1)
         if not lock_mode:
             if bt.keyboard.get_state() is Keyboard.DEVICE_CONNECTED:  # 设备连接蓝牙才响应键盘事件
                 # 旋钮状态
@@ -466,32 +500,7 @@ while True:
 
             if bt.keyboard.get_state() is Keyboard.DEVICE_CONNECTED or mode_music_is:
                 # 键盘事件
-                line_col = None
-                for j, col_pin in enumerate(
-                        [Pin(15, Pin.OUT), Pin(2, Pin.OUT), Pin(4, Pin.OUT), Pin(16, Pin.OUT), Pin(17, Pin.OUT)]):
-                    col_pin.value(0)  # 将当前列设置为低电平
-                    for i, row_pin in enumerate(
-                            [Pin(5, Pin.IN, Pin.PULL_UP), Pin(18, Pin.IN, Pin.PULL_UP), Pin(19, Pin.IN, Pin.PULL_UP),
-                             Pin(23, Pin.IN, Pin.PULL_UP)]):
-                        if row_pin.value() == 0:  # 检测行引脚的状态
-                            # 将当前列恢复为高电平
-                            col_pin.value(1)
-                            line_col = j, i  # 记录当前按键的行列号
-                    col_pin.value(1)  # 将当前列恢复为高电平
-                if not mode_music_is:
-                    if line_col is not None and bt.keyboard.get_state() is Keyboard.DEVICE_CONNECTED:
-                        print(line_col)  # 返回按下的按键
-                        once_click = _keys[line_col[0]][line_col[1]]
-                        OutputHidIncident(bt, _keys[line_col[0]][line_col[1]], win_os_is)
-                        time.sleep_ms(170)
-                else:
-                    if line_col is not None:
-                        if int(tone_dict[str(_keys[line_col[0]][line_col[1]])]) > 0:
-                            Buzzer.duty(900)
-                            Buzzer.freq(int(tone_dict[str(_keys[line_col[0]][line_col[1]])]))
-                    else:
-                        Buzzer.duty(0)
-                        Buzzer.freq(40000000)
-                    pass
+                keyboard_handler([Pin(15, Pin.OUT), Pin(2, Pin.OUT), Pin(4, Pin.OUT), Pin(16, Pin.OUT), Pin(17, Pin.OUT)],
+                                 [Pin(5, Pin.IN, Pin.PULL_UP), Pin(18, Pin.IN, Pin.PULL_UP), Pin(19, Pin.IN, Pin.PULL_UP), Pin(23, Pin.IN, Pin.PULL_UP)])
     else:
         pilot_lamp.value(0)  # 关闭飞行灯
